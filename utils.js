@@ -111,7 +111,6 @@ const checkSyntax = (code) => {
   if (command == "HLT") {
     return code_array;
   }
-
   return error_message;
 };
 export { hex, dec, isHex, inr, hexCode, checkSyntax };

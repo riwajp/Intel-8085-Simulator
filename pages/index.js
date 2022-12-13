@@ -69,7 +69,7 @@ export default function Home() {
   const load = (code) => {
     setRegisters(initial_registers);
     setMemory({});
-    let code_lines_separated = code.split("\n");
+    let code_lines_separated = code.split("\n").filter((c) => c != "");
 
     var address = current_address;
     let memory_temp = {};
@@ -106,6 +106,7 @@ export default function Home() {
 
   //Execute the code ============================================================
   const execute = (code) => {
+    console.log(code);
     let logs_temp = [];
     let memory = load(code.toUpperCase().trim());
 
