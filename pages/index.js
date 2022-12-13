@@ -1,10 +1,10 @@
 import styles from "../styles/Home.module.css";
-import { memo, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import codes_json from "../codes";
 
 import Memory from "./Components/Memory";
 import Registers from "./Components/Registers";
-import { inr, hexCode, isHex, checkSyntax } from "../utils";
+import { inr, hexCode, hex, checkSyntax, dec } from "../utils";
 import CodeEditor from "./Components/CodeEditor";
 import Log from "./Components/Log";
 import Flag from "./Components/Flag";
@@ -28,7 +28,44 @@ export default function Home() {
   const [memory_states, setMemoryStates] = useState([]);
   const [register_states, setRegisterStates] = useState([]);
   const [compilation_memory, setCompilationMemory] = useState({});
+  const [flags, setFlags] = useState({ C: 0, AC: 0, P: 0, Z: 0, S: 0 });
   //load the program into the memory============================================================
+
+  /*
+  useEffect(() => {
+    let flags_temp = { C: 0, AC: 0, P: 0, Z: 0, S: 0 };
+    if (registers["A"].length == 3) {
+      flags_temp.C = 1;
+    }
+    setFlags(flags_temp);
+  }, [registers]);
+  */
+
+  const flagSetter = (acc) => {
+    let flags_temp = { C: 0, AC: 0, P: 0, Z: 0, S: 0 };
+    if (Math.abs(acc).length == 3) {
+      flags_temp.C = 1;
+    }
+    if (dec(acc) < 0) {
+      flags_temp.S = 1;
+    }
+    if (dec(acc) == 0) {
+      flags_temp.Z = 1;
+    }
+    return flags_temp;
+  };
+
+  useEffect(() => {
+    if (Object.keys(memory).filter((m) => memory[m].length >= 3).length) {
+      let memory_temp = memory;
+      for (let i of Object.keys(memory_temp)) {
+        if (memory_temp[i].length >= 3) {
+          memory_temp[i] = memory_temp[i].slice(1);
+        }
+      }
+      setMemory(memory_temp);
+    }
+  }, [memory]);
   const load = (code) => {
     setRegisters(initial_registers);
     setMemory({});
@@ -49,7 +86,6 @@ export default function Home() {
       address = inr(address);
       if (hex_code.opCode == "EF") {
         setCompilationMemory(memory_temp);
-        console.log(memory_temp);
         return memory_temp;
       }
 
@@ -82,6 +118,7 @@ export default function Home() {
     var program_counter = current_address;
     let register_states_temp = [];
     let memory_states_temp = [];
+    let flags_temp = { C: 0, AC: 0, P: 0, Z: 0, S: 0 };
     while (memory[program_counter] != "EF") {
       try {
         var code = memory[program_counter].toUpperCase();
@@ -124,6 +161,7 @@ export default function Home() {
         program_counter = inr(program_counter);
         memory_states_temp.push(JSON.parse(JSON.stringify(memory)));
         register_states_temp.push(JSON.parse(JSON.stringify(registers_temp)));
+        flags_temp = flagSetter(registers_temp["A"]);
       }
       //========================================================================================================
 
@@ -182,6 +220,7 @@ export default function Home() {
         }
         memory_states_temp.push(JSON.parse(JSON.stringify(memory)));
         register_states_temp.push(JSON.parse(JSON.stringify(registers_temp)));
+        flags_temp = flagSetter(registers_temp["A"]);
       }
 
       //XCHG============================================================
@@ -202,6 +241,7 @@ export default function Home() {
         });
         memory_states_temp.push(JSON.parse(JSON.stringify(memory)));
         register_states_temp.push(JSON.parse(JSON.stringify(registers_temp)));
+        flags_temp = flagSetter(registers_temp["A"]);
       }
 
       //LXI==================================================================
@@ -253,6 +293,7 @@ export default function Home() {
         program_counter = inr(inr(program_counter));
         memory_states_temp.push(JSON.parse(JSON.stringify(memory)));
         register_states_temp.push(JSON.parse(JSON.stringify(registers_temp)));
+        flags_temp = flagSetter(registers_temp["A"]);
       }
       //LDAX==============================================================
       if (code_text_array[0] == "LDAX") {
@@ -292,6 +333,7 @@ export default function Home() {
         }
         memory_states_temp.push(JSON.parse(JSON.stringify(memory)));
         register_states_temp.push(JSON.parse(JSON.stringify(registers_temp)));
+        flags_temp = flagSetter(registers_temp["A"]);
       }
 
       if (code_text_array[0] == "LHLD") {
@@ -321,6 +363,7 @@ export default function Home() {
         program_counter = inr(inr(program_counter));
         memory_states_temp.push(JSON.parse(JSON.stringify(memory)));
         register_states_temp.push(JSON.parse(JSON.stringify(registers_temp)));
+        flags_temp = flagSetter(registers_temp["A"]);
       }
 
       if (code_text_array[0] == "LDA") {
@@ -341,6 +384,7 @@ export default function Home() {
         program_counter = inr(inr(program_counter));
         memory_states_temp.push(JSON.parse(JSON.stringify(memory)));
         register_states_temp.push(JSON.parse(JSON.stringify(registers_temp)));
+        flags_temp = flagSetter(registers_temp["A"]);
       }
 
       if (code_text_array[0] == "STAX") {
@@ -379,6 +423,7 @@ export default function Home() {
         }
         memory_states_temp.push(JSON.parse(JSON.stringify(memory)));
         register_states_temp.push(JSON.parse(JSON.stringify(registers_temp)));
+        flags_temp = flagSetter(registers_temp["A"]);
       }
 
       if (code_text_array[0] == "SHLD") {
@@ -406,6 +451,7 @@ export default function Home() {
         program_counter = inr(inr(program_counter));
         memory_states_temp.push(JSON.parse(JSON.stringify(memory)));
         register_states_temp.push(JSON.parse(JSON.stringify(registers_temp)));
+        flags_temp = flagSetter(registers_temp["A"]);
       }
       if (code_text_array[0] == "STA") {
         program_counter = inr(program_counter);
@@ -423,6 +469,7 @@ export default function Home() {
         program_counter = inr(inr(program_counter));
         memory_states_temp.push(JSON.parse(JSON.stringify(memory)));
         register_states_temp.push(JSON.parse(JSON.stringify(registers_temp)));
+        flags_temp = flagSetter(registers_temp["A"]);
       }
     }
     setMemory(memory);
@@ -430,6 +477,7 @@ export default function Home() {
     setLogs(logs_temp);
     setMemoryStates(memory_states_temp);
     setRegisterStates(register_states_temp);
+    setFlags(flags_temp);
   };
 
   return (
@@ -454,7 +502,7 @@ export default function Home() {
           register_states={register_states}
           memory_states={memory_states}
         />
-        <Flag />
+        <Flag flags={flags} />
       </div>
     </div>
   );

@@ -18,8 +18,10 @@ function Memory({ memory, compilation_memory }) {
                 Object.keys(compilation_memory).includes(m) ? "compilation" : ""
               }`}
             >
-              <div className="memory-address">{m.toUpperCase()}</div>
-              <div className="memory-data">{memory[m]}</div>
+              <div className="memory-address">
+                {m.toUpperCase().padStart(4, "0")}
+              </div>
+              <div className="memory-data">{memory[m].padStart(2, "0")}</div>
             </div>
           ))}
       </div>

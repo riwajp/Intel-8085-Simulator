@@ -1,11 +1,17 @@
 import React from "react";
 
-const Flag = () => {
+const Flag = ({ flags }) => {
   return (
     <div className="flag-container">
       <div className="flag-container">
         <div className="flag-container-title">Flags</div>
-        <div className="flag-body">Comming Soon</div>
+        <div className="flag-body">
+          {Object.keys(flags).map((f) => (
+            <div>
+              {f}: {flags[f]}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

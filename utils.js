@@ -12,6 +12,11 @@ const isHex = (hex, size) => {
 };
 
 const inr = (hx) => {
+  console.log(hx);
+  if (hx.toString().toUpperCase() == "FFFF") {
+    return 0x0000;
+  }
+
   return hex(dec(hx) + 1);
 };
 
@@ -36,22 +41,15 @@ const hexCode = (code) => {
     }
   }
 
-  console.log(opCodes);
-
   return opCodes.length ? opCodes[opCodes.length - 1] : 0;
 };
 
 const checkSyntax = (code) => {
-  console.log(code);
-
   let code_array = code.replace(/\s+/g, " ").split(" ");
 
-  console.log(code_array);
   let registers = ["A", "B", "C", "D", "E", "H", "L", "M"];
   let command = code_array[0];
   var error_message = "The given command doesn't exist.";
-
-  console.log(command);
 
   if (command == "MVI") {
     if (registers.includes(code_array[1]) && isHex(code_array[2], 2)) {
@@ -101,6 +99,15 @@ const checkSyntax = (code) => {
     }
   }
 
+  /*
+  if (command == "ADD" || command == "ADC" || command == "SUB") {
+    if (registers.includes(code_array[1])) {
+      return code_array;
+    } else {
+      error_message = "The argument must be a register.";
+    }
+  }
+*/
   if (command == "HLT") {
     return code_array;
   }

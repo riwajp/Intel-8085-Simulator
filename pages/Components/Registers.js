@@ -12,7 +12,11 @@ function Registers({ registers }) {
         {Object.keys(registers ? registers : {})?.map((r) => (
           <div className="memory-element" key={r}>
             <div className="memory-address">{r.toUpperCase()}</div>
-            <div className="memory-data">{registers[r]}</div>
+            <div className="memory-data">
+              {registers[r].length >= 3
+                ? registers[r].slice(1)
+                : registers[r].padStart(2, "0")}
+            </div>
           </div>
         ))}
       </div>
