@@ -10,7 +10,7 @@ import Log from "./Components/Log";
 import Flag from "./Components/Flag";
 import Tools from "./Components/Tools";
 export default function Home() {
-  const [registers, setRegisters] = useState({
+  let initial_registers = {
     A: "00",
     B: "00",
     C: "00",
@@ -18,13 +18,19 @@ export default function Home() {
     E: "00",
     H: "00",
     L: "00",
-  });
+  };
+  let initial_memory = {};
+  const [registers, setRegisters] = useState(initial_registers);
 
   const [current_address, setCurrentAddress] = useState("6969");
   const [memory, setMemory] = useState({});
   const [logs, setLogs] = useState([]);
+  const [memory_states, setMemoryStates] = useState([]);
+  const [register_states, setRegisterStates] = useState([]);
+  console.log(memory_states, register_states);
   //load the program into the memory============================================================
   const load = (code) => {
+    setRegisters(initial_registers);
     let code_lines_separated = code.split("\n");
 
     var address = current_address;
@@ -37,7 +43,6 @@ export default function Home() {
         return `Error on line ${parseInt(i) + 1}: ${line}`;
       }
       let hex_code = hexCode(line);
-      console.log(hex_code);
 
       memory[address] = hex_code.opCode;
       address = inr(address);
@@ -63,19 +68,20 @@ export default function Home() {
   const execute = (code) => {
     let logs_temp = [];
     let memory = load(code.toUpperCase().trim());
+
     if (typeof memory != "object") {
       setLogs([{ type: "error", message: memory }]);
-      console.log(memory);
       return;
     }
-    let registers_temp = registers;
+    let registers_temp = initial_registers;
 
     var program_counter = current_address;
+    let register_states_temp = [];
+    let memory_states_temp = [];
     while (memory[program_counter] != "EF") {
       try {
         var code = memory[program_counter].toUpperCase();
       } catch {
-        console.log("Did you miss HLT?");
         return;
       }
       let code_text = codes_json.filter((c) => c.opCode == code)[0].label;
@@ -112,6 +118,8 @@ export default function Home() {
           });
         }
         program_counter = inr(program_counter);
+        memory_states_temp.push(JSON.parse(JSON.stringify(memory)));
+        register_states_temp.push(JSON.parse(JSON.stringify(registers_temp)));
       }
       //========================================================================================================
 
@@ -168,6 +176,8 @@ export default function Home() {
             }`,
           });
         }
+        memory_states_temp.push(JSON.parse(JSON.stringify(memory)));
+        register_states_temp.push(JSON.parse(JSON.stringify(registers_temp)));
       }
 
       //XCHG============================================================
@@ -186,6 +196,8 @@ export default function Home() {
           code: code_text_array.join(" "),
           message: `Exchanged the data between DE and HL register.`,
         });
+        memory_states_temp.push(JSON.parse(JSON.stringify(memory)));
+        register_states_temp.push(JSON.parse(JSON.stringify(registers_temp)));
       }
 
       //LXI==================================================================
@@ -235,6 +247,8 @@ export default function Home() {
         }
 
         program_counter = inr(inr(program_counter));
+        memory_states_temp.push(JSON.parse(JSON.stringify(memory)));
+        register_states_temp.push(JSON.parse(JSON.stringify(registers_temp)));
       }
       //LDAX==============================================================
       if (code_text_array[0] == "LDAX") {
@@ -272,6 +286,8 @@ export default function Home() {
             A`,
           });
         }
+        memory_states_temp.push(JSON.parse(JSON.stringify(memory)));
+        register_states_temp.push(JSON.parse(JSON.stringify(registers_temp)));
       }
 
       if (code_text_array[0] == "LHLD") {
@@ -299,6 +315,8 @@ export default function Home() {
         });
 
         program_counter = inr(inr(program_counter));
+        memory_states_temp.push(JSON.parse(JSON.stringify(memory)));
+        register_states_temp.push(JSON.parse(JSON.stringify(registers_temp)));
       }
 
       if (code_text_array[0] == "LDA") {
@@ -317,6 +335,8 @@ export default function Home() {
           } into register A.`,
         });
         program_counter = inr(inr(program_counter));
+        memory_states_temp.push(JSON.parse(JSON.stringify(memory)));
+        register_states_temp.push(JSON.parse(JSON.stringify(registers_temp)));
       }
 
       if (code_text_array[0] == "STAX") {
@@ -353,6 +373,8 @@ export default function Home() {
             }.)`,
           });
         }
+        memory_states_temp.push(JSON.parse(JSON.stringify(memory)));
+        register_states_temp.push(JSON.parse(JSON.stringify(registers_temp)));
       }
 
       if (code_text_array[0] == "SHLD") {
@@ -378,6 +400,8 @@ export default function Home() {
           )}).`,
         });
         program_counter = inr(inr(program_counter));
+        memory_states_temp.push(JSON.parse(JSON.stringify(memory)));
+        register_states_temp.push(JSON.parse(JSON.stringify(registers_temp)));
       }
       if (code_text_array[0] == "STA") {
         program_counter = inr(program_counter);
@@ -389,11 +413,15 @@ export default function Home() {
         });
 
         program_counter = inr(inr(program_counter));
+        memory_states_temp.push(JSON.parse(JSON.stringify(memory)));
+        register_states_temp.push(JSON.parse(JSON.stringify(registers_temp)));
       }
     }
     setMemory(memory);
     setRegisters(registers_temp);
     setLogs(logs_temp);
+    setMemoryStates(memory_states_temp);
+    setRegisterStates(register_states_temp);
   };
 
   return (
@@ -407,7 +435,13 @@ export default function Home() {
         <Tools />
       </div>
       <div className="bottom-container">
-        <Log logs={logs} />
+        <Log
+          logs={logs}
+          setMemory={setMemory}
+          setRegisters={setRegisters}
+          register_states={register_states}
+          memory_states={memory_states}
+        />
         <Flag />
       </div>
     </div>
