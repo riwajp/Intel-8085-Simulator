@@ -27,14 +27,15 @@ export default function Home() {
   const [logs, setLogs] = useState([]);
   const [memory_states, setMemoryStates] = useState([]);
   const [register_states, setRegisterStates] = useState([]);
-  console.log(memory_states, register_states);
+  const [compilation_memory, setCompilationMemory] = useState({});
   //load the program into the memory============================================================
   const load = (code) => {
     setRegisters(initial_registers);
+    setMemory({});
     let code_lines_separated = code.split("\n");
 
     var address = current_address;
-    let memory_temp = memory;
+    let memory_temp = {};
 
     for (let i in code_lines_separated) {
       var line = checkSyntax(code_lines_separated[i]);
@@ -44,23 +45,26 @@ export default function Home() {
       }
       let hex_code = hexCode(line);
 
-      memory[address] = hex_code.opCode;
+      memory_temp[address] = hex_code.opCode;
       address = inr(address);
       if (hex_code.opCode == "EF") {
+        setCompilationMemory(memory_temp);
+        console.log(memory_temp);
         return memory_temp;
       }
 
       if (hex_code.data != "") {
-        memory[address] = hex_code.data.substring(0, 2);
+        memory_temp[address] = hex_code.data.substring(0, 2);
 
         address = inr(address);
         if (hex_code.data.length == 4) {
-          memory[address] = hex_code.data.substring(2, 5);
+          memory_temp[address] = hex_code.data.substring(2, 5);
           address = inr(address);
         }
       }
     }
     setMemory(memory_temp);
+
     return `You missed HLT!`;
   };
 
@@ -427,8 +431,12 @@ export default function Home() {
   return (
     <div className="body-container">
       <div className="main-container">
-        <CodeEditor execute={(code) => execute(code)} />
-        <Memory memory={memory} />
+        <CodeEditor
+          execute={(code) => execute(code)}
+          current_address={current_address}
+          setCurrentAddress={setCurrentAddress}
+        />
+        <Memory memory={memory} compilation_memory={compilation_memory} />
 
         <Registers registers={registers} />
 
