@@ -10,9 +10,9 @@ function Memory({ memory, compilation_memory }) {
           <div className="memory-slots-title-address">Address</div>
           <div className="memory-slots-title-data">Data</div>
         </div>
-        {Object.keys(memory)
-          .sort((m, n) => dec(m) - dec(n))
-          .map((m) => (
+        {Object.keys(memory ? memory : {})
+          ?.sort((m, n) => dec(m) - dec(n))
+          ?.map((m) => (
             <div
               className={`memory-element ${
                 Object.keys(compilation_memory).includes(m) ? "compilation" : ""

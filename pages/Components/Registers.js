@@ -9,7 +9,7 @@ function Registers({ registers }) {
           <div className="memory-slots-title-address">Register</div>
           <div className="memory-slots-title-data">Data</div>
         </div>
-        {Object.keys(registers).map((r) => (
+        {Object.keys(registers ? registers : {})?.map((r) => (
           <div className="memory-element" key={r}>
             <div className="memory-address">{r.toUpperCase()}</div>
             <div className="memory-data">{registers[r]}</div>

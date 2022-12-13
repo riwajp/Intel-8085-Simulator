@@ -1,6 +1,4 @@
 import React, { useRef, useState, useEffect } from "react";
-import { dec, hex, isHex } from "../../utils";
-import Beacon from "./Beacon";
 
 const CodeEditor = ({ execute, setCurrentAddress, current_address }) => {
   let handleChange = (val) => {
@@ -12,6 +10,8 @@ const CodeEditor = ({ execute, setCurrentAddress, current_address }) => {
 
   const div_ref = useRef();
   useEffect(() => {
+    execute(div_ref.current.innerText);
+
     let code = div_ref?.current.innerText;
     let code_array = code?.split("\n");
     setLines(code_array);
@@ -54,8 +54,12 @@ const CodeEditor = ({ execute, setCurrentAddress, current_address }) => {
           ref={div_ref}
           className="code-editor-editable"
         >
-          <br />
-          hlt
+          LXI H 9500
+          <br /> MVI M 32
+          <br /> MVI L 01
+          <br /> MVI M 7A <br />
+          LHLD 9500 <br />
+          HLT
         </div>
       </div>
     </div>

@@ -15,7 +15,7 @@ const Log = ({
     <div className="logs-container">
       <div className="logs-container-title">Logs</div>
       <div className="log-elements">
-        {logs.map((l, i) => (
+        {logs?.map((l, i) => (
           <div
             className={`log-element ${i == active_index ? "active" : ""} `}
             onClick={() => {
