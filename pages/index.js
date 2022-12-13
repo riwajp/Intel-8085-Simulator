@@ -409,7 +409,11 @@ export default function Home() {
       }
       if (code_text_array[0] == "STA") {
         program_counter = inr(program_counter);
-        memory = { ...memory, [memory[program_counter]]: registers_temp["A"] };
+        memory = {
+          ...memory,
+          [memory[program_counter] + memory[inr(program_counter)]]:
+            registers_temp["A"],
+        };
         logs_temp.push({
           type: "success",
           code: code_text_array.join(" "),
