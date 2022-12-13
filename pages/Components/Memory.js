@@ -1,32 +1,22 @@
-import React, { useEffect, useState, useRef, memo } from "react";
-import { isHex, inr } from "../../utils";
+import React from "react";
 
-function Memory({ address, memory, setMemory, setCurrentAddress }) {
-  const [data, setData] = useState(memory[address]);
-
-  useEffect(() => {
-    setData(memory[address] ? memory[address] : "");
-  }, [address]);
-
-  useEffect(() => {
-    if (isHex(data, 2)) {
-      setMemory({ ...memory, [address]: data.padStart(2, "0") });
-    }
-  }, [data]);
+function Memory({ memory }) {
+  console.log(memory);
   return (
-    <div>
-      <h2>Memory</h2>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (isHex(data, 2)) {
-            setCurrentAddress(inr(address));
-          }
-        }}
-      >
-        <div>Address: {address}</div>
-        Data: <input onChange={(e) => setData(e.target.value)} value={data} />
-      </form>
+    <div className="memory-container">
+      <div className="memory-container-title">Memory</div>
+      <div className="memory-slots">
+        <div className="memory-slots-title-container">
+          <div className="memory-slots-title-address">Address</div>
+          <div className="memory-slots-title-data">Data</div>
+        </div>
+        {Object.keys(memory).map((m) => (
+          <div className="memory-element">
+            <div className="memory-address">{m.toUpperCase()}</div>
+            <div className="memory-data">{memory[m]}</div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

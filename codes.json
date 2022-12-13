@@ -265,7 +265,7 @@
     },
     {
       "label": "HLT",
-      "opCode": "EF/76"
+      "opCode": "EF"
     },
     {
       "label": "IN Port-address",
