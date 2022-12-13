@@ -305,7 +305,7 @@ padding-right:0;
   grid-column-end: 13;
 }
 .error{
-  color:red;
+  color:rgb(227, 65, 65);
 }
 
 .active{
@@ -333,4 +333,10 @@ padding-right:0;
   float:right;
   text-transform: uppercase;
   letter-spacing: 5px;
+}
+.steps{
+
+  display:none;
+  width:0;
+  height:0;
 }

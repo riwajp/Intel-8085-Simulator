@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
 import { dec, hex, isHex } from "../../utils";
+import Beacon from "./Beacon";
 
 const CodeEditor = ({ execute, setCurrentAddress, current_address }) => {
   let handleChange = (val) => {
@@ -26,6 +27,7 @@ const CodeEditor = ({ execute, setCurrentAddress, current_address }) => {
     <div className="code-container">
       <div className="code-container-head">
         <div className="code-container-title">Code Editor</div>
+
         <div className="start-from-container">
           <div className="address-label">Start Address</div>
           <input
