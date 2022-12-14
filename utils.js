@@ -12,12 +12,13 @@ const isHex = (hex, size) => {
 };
 
 const inr = (hx) => {
-  console.log(hx);
   if (hx.toString().toUpperCase() == "FFFF") {
     return 0x0000;
   }
 
-  return hex(dec(hx) + 1);
+  return hex(dec(hx) + 1)
+    .padStart(hx.length, "0")
+    .toUpperCase();
 };
 
 const hexCode = (code) => {
@@ -52,7 +53,11 @@ const checkSyntax = (code) => {
   var error_message = "The given command doesn't exist.";
 
   if (command == "MVI") {
-    if (registers.includes(code_array[1]) && isHex(code_array[2], 2)) {
+    if (
+      registers.includes(code_array[1]) &&
+      isHex(code_array[2], 2) &&
+      code_array[2].length == 2
+    ) {
       return code_array;
     } else {
       error_message = "The arguments must be a register and a 8-bit data";
@@ -92,11 +97,15 @@ const checkSyntax = (code) => {
     command == "LDA" ||
     command == "STA"
   ) {
-    if (isHex(code_array[1], 4)) {
+    if (isHex(code_array[1], 4) && code_array[1].length == 4) {
       return code_array;
     } else {
       error_message = "The argument must be a 16-bit address.";
     }
+  }
+
+  if (command == "XCHG") {
+    return code_array;
   }
 
   /*

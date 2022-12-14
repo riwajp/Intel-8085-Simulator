@@ -86,6 +86,8 @@ export default function Home() {
       address = inr(address);
       if (hex_code.opCode == "EF") {
         setCompilationMemory(memory_temp);
+        console.log(memory_temp);
+
         return memory_temp;
       }
 
@@ -106,7 +108,6 @@ export default function Home() {
 
   //Execute the code ============================================================
   const execute = (code) => {
-    console.log(code);
     let logs_temp = [];
     let memory = load(code.toUpperCase().trim());
 
@@ -160,15 +161,11 @@ export default function Home() {
           });
         }
         program_counter = inr(program_counter);
-        memory_states_temp.push(JSON.parse(JSON.stringify(memory)));
-        register_states_temp.push(JSON.parse(JSON.stringify(registers_temp)));
-        flags_temp = flagSetter(registers_temp["A"]);
       }
       //========================================================================================================
 
       //mov=====================================================================================================
-
-      if (code_text_array[0] == "MOV") {
+      else if (code_text_array[0] == "MOV") {
         program_counter = inr(program_counter);
 
         if (code_text_array[1] != "M") {
@@ -185,7 +182,7 @@ export default function Home() {
               } into register ${code_text_array[1]}`,
             });
           } else {
-            register_temp = {
+            registers_temp = {
               ...registers_temp,
               [code_text_array[1]]:
                 memory[[registers_temp["H"] + registers_temp["L"]]],
@@ -219,13 +216,10 @@ export default function Home() {
             }`,
           });
         }
-        memory_states_temp.push(JSON.parse(JSON.stringify(memory)));
-        register_states_temp.push(JSON.parse(JSON.stringify(registers_temp)));
-        flags_temp = flagSetter(registers_temp["A"]);
       }
 
       //XCHG============================================================
-      if (code_text_array[0] == "XCHG") {
+      else if (code_text_array[0] == "XCHG") {
         program_counter = inr(program_counter);
         registers_temp = {
           ...registers_temp,
@@ -240,13 +234,10 @@ export default function Home() {
           code: code_text_array.join(" "),
           message: `Exchanged the data between DE and HL register.`,
         });
-        memory_states_temp.push(JSON.parse(JSON.stringify(memory)));
-        register_states_temp.push(JSON.parse(JSON.stringify(registers_temp)));
-        flags_temp = flagSetter(registers_temp["A"]);
       }
 
       //LXI==================================================================
-      if (code_text_array[0] == "LXI") {
+      else if (code_text_array[0] == "LXI") {
         program_counter = inr(program_counter);
         if (code_text_array[1] == "B") {
           registers_temp = {
@@ -292,103 +283,97 @@ export default function Home() {
         }
 
         program_counter = inr(inr(program_counter));
-        memory_states_temp.push(JSON.parse(JSON.stringify(memory)));
-        register_states_temp.push(JSON.parse(JSON.stringify(registers_temp)));
-        flags_temp = flagSetter(registers_temp["A"]);
       }
       //LDAX==============================================================
-      if (code_text_array[0] == "LDAX") {
+      else if (code_text_array[0] == "LDAX") {
         program_counter = inr(program_counter);
+        let data = memory[registers_temp["B"] + registers_temp["C"]]
+          ? memory[registers_temp["B"] + registers_temp["C"]]
+          : "00";
+
         if (code_text_array[1] == "B") {
           registers_temp = {
             ...registers_temp,
-            A: memory[registers_temp["B"] + registers_temp["C"]],
+            A: data,
           };
           logs_temp.push({
             type: "success",
             code: code_text_array.join(" "),
             message: `Loaded the data stored in memory location pointed by register BC(${
               registers_temp["B"] + registers_temp["C"]
-            }) i.e. ${
-              memory[registers_temp["B"] + registers_temp["C"]]
-            } into register 
+            }) i.e. ${data} into register 
             A`,
           });
         }
 
         if (code_text_array[1] == "D") {
+          let data = memory[registers_temp["D"] + registers_temp["E"]]
+            ? memory[registers_temp["D"] + registers_temp["E"]]
+            : "00";
           registers_temp = {
             ...registers_temp,
-            A: memory[registers_temp["D"] + registers_temp["E"]],
+            A: data,
           };
           logs_temp.push({
             type: "success",
             code: code_text_array.join(" "),
             message: `Loaded the data stored in memory location pointed by register DE(${
               registers_temp["D"] + registers_temp["E"]
-            }) i.e. ${
-              memory[registers_temp["D"] + registers_temp["E"]]
-            } into register 
+            }) i.e. ${data} into register 
             A`,
           });
         }
-        memory_states_temp.push(JSON.parse(JSON.stringify(memory)));
-        register_states_temp.push(JSON.parse(JSON.stringify(registers_temp)));
-        flags_temp = flagSetter(registers_temp["A"]);
-      }
-
-      if (code_text_array[0] == "LHLD") {
+      } else if (code_text_array[0] == "LHLD") {
+        console.log("here");
         program_counter = inr(program_counter);
-
+        let data_L = memory[
+          memory[program_counter] + memory[inr(program_counter)]
+        ]
+          ? memory[memory[program_counter] + memory[inr(program_counter)]]
+          : "00";
+        let data_H = memory[
+          inr(memory[program_counter] + memory[inr(program_counter)])
+        ]
+          ? memory[inr(memory[program_counter] + memory[inr(program_counter)])]
+          : "00";
+        console.log(data_H, data_L);
         registers_temp = {
           ...registers_temp,
-          L: memory[memory[program_counter] + memory[inr(program_counter)]],
-          H: memory[
-            inr(memory[program_counter] + memory[inr(program_counter)])
-          ],
+          L: data_L,
+          H: data_H,
         };
         logs_temp.push({
           type: "success",
           code: code_text_array.join(" "),
           message: `Loaded the data stored in given memory location (${
             memory[program_counter] + memory[inr(program_counter)]
-          }) i.e ${
-            memory[memory[program_counter] + memory[inr(program_counter)]]
-          } in L and data stored in given memory location (${inr(
+          }) i.e ${data_L} in L and data stored in given memory location (${inr(
             memory[program_counter] + memory[inr(program_counter)]
-          )}) i.e ${
-            memory[inr(memory[program_counter] + memory[inr(program_counter)])]
-          } in H.`,
+          )}) i.e ${data_H} in H.`,
         });
 
         program_counter = inr(inr(program_counter));
-        memory_states_temp.push(JSON.parse(JSON.stringify(memory)));
-        register_states_temp.push(JSON.parse(JSON.stringify(registers_temp)));
-        flags_temp = flagSetter(registers_temp["A"]);
-      }
+      } else if (code_text_array[0] == "LDA") {
+        let data = memory[
+          memory[program_counter] + memory[inr(program_counter)]
+        ]
+          ? memory[memory[program_counter] + memory[inr(program_counter)]]
+          : "00";
 
-      if (code_text_array[0] == "LDA") {
         program_counter = inr(program_counter);
         registers_temp = {
           ...registers_temp,
-          A: memory[memory[program_counter] + memory[inr(program_counter)]],
+          A: data,
         };
         logs_temp.push({
           type: "success",
           code: code_text_array.join(" "),
           message: `Loaded the data stored in given memory location ${
             memory[program_counter] + memory[inr(program_counter)]
-          } i.e ${
-            memory[memory[program_counter] + memory[inr(program_counter)]]
-          } into register A.`,
+          } i.e ${data} into register A.`,
         });
         program_counter = inr(inr(program_counter));
-        memory_states_temp.push(JSON.parse(JSON.stringify(memory)));
-        register_states_temp.push(JSON.parse(JSON.stringify(registers_temp)));
-        flags_temp = flagSetter(registers_temp["A"]);
-      }
-
-      if (code_text_array[0] == "STAX") {
+      } else if (code_text_array[0] == "STAX") {
         program_counter = inr(program_counter);
         if (code_text_array[1] == "B") {
           memory = {
@@ -404,9 +389,7 @@ export default function Home() {
               registers_temp["B"] + registers_temp["C"]
             }.)`,
           });
-        }
-
-        if (code_text_array[1] == "D") {
+        } else if (code_text_array[1] == "D") {
           memory = {
             ...memory,
             [registers_temp["D"] + registers_temp["E"]]: registers_temp["A"],
@@ -422,12 +405,7 @@ export default function Home() {
             }.)`,
           });
         }
-        memory_states_temp.push(JSON.parse(JSON.stringify(memory)));
-        register_states_temp.push(JSON.parse(JSON.stringify(registers_temp)));
-        flags_temp = flagSetter(registers_temp["A"]);
-      }
-
-      if (code_text_array[0] == "SHLD") {
+      } else if (code_text_array[0] == "SHLD") {
         program_counter = inr(program_counter);
         memory = {
           ...memory,
@@ -450,11 +428,7 @@ export default function Home() {
           )}).`,
         });
         program_counter = inr(inr(program_counter));
-        memory_states_temp.push(JSON.parse(JSON.stringify(memory)));
-        register_states_temp.push(JSON.parse(JSON.stringify(registers_temp)));
-        flags_temp = flagSetter(registers_temp["A"]);
-      }
-      if (code_text_array[0] == "STA") {
+      } else if (code_text_array[0] == "STA") {
         program_counter = inr(program_counter);
         memory = {
           ...memory,
@@ -464,14 +438,18 @@ export default function Home() {
         logs_temp.push({
           type: "success",
           code: code_text_array.join(" "),
-          message: `Stored the content of register A i.e ${registers_temp["A"]} into given memory location ${memory[program_counter]}`,
+          message: `Stored the content of register A i.e ${
+            registers_temp["A"]
+          } into given memory location ${[
+            memory[program_counter] + memory[inr(program_counter)],
+          ]}`,
         });
 
         program_counter = inr(inr(program_counter));
-        memory_states_temp.push(JSON.parse(JSON.stringify(memory)));
-        register_states_temp.push(JSON.parse(JSON.stringify(registers_temp)));
-        flags_temp = flagSetter(registers_temp["A"]);
       }
+      memory_states_temp.push(JSON.parse(JSON.stringify(memory)));
+      register_states_temp.push(JSON.parse(JSON.stringify(registers_temp)));
+      flags_temp = flagSetter(registers_temp["A"]);
     }
     setMemory(memory);
     setRegisters(registers_temp);
