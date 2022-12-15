@@ -403,7 +403,7 @@ export default function Home() {
           ...memory,
           [memory[program_counter] + memory[inr(program_counter)]]:
             registers_temp["L"],
-          [memory[inr(memory[program_counter] + memory[inr(program_counter)])]]:
+          [inr(memory[program_counter] + memory[inr(program_counter)])]:
             registers_temp["H"],
         };
         logs_temp.push({
