@@ -51,7 +51,6 @@ const hexCode = (code) => {
       });
     }
   }
-  console.log(JSON.stringify(opCodes));
   return opCodes.length ? opCodes[opCodes.length - 1] : 0;
 };
 
@@ -85,7 +84,12 @@ const checkSyntax = (code) => {
     }
   }
 
-  if (command == "LXI" || command == "INX" || command == "DCX") {
+  if (
+    command == "LXI" ||
+    command == "INX" ||
+    command == "DCX" ||
+    command == "DAD"
+  ) {
     if (code_array[1] == "B" || code_array[1] == "D" || code_array[1] == "H") {
       return code_array;
     } else {
@@ -122,7 +126,11 @@ const checkSyntax = (code) => {
     command == "ADD" ||
     command == "ADC" ||
     command == "SUB" ||
-    command == "SBB"
+    command == "SBB" ||
+    command == "ANA" ||
+    command == "XRA" ||
+    command == "ORA" ||
+    command == "CMP"
   ) {
     if (registers.includes(code_array[1])) {
       return code_array;
@@ -138,7 +146,14 @@ const checkSyntax = (code) => {
       error_message = "The argumentt must be a register or memory.";
     }
   }
-  if (command == "ADI" || command == "SUI") {
+  if (
+    command == "ADI" ||
+    command == "SUI" ||
+    command == "ANI" ||
+    command == "ORI" ||
+    command == "XRI" ||
+    command == "CPI"
+  ) {
     if (isHex(code_array[1], 2) && code_array[1].length == 2) {
       return code_array;
     } else {

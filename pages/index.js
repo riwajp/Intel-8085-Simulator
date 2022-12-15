@@ -836,8 +836,147 @@ export default function Home() {
             }`,
           });
         }
+      } else if (code_text_array[0] == "DAD") {
+        program_counter = inr(program_counter);
+        var to_add;
+        var rp;
+        if (code_text_array[1] == "B") {
+          to_add = registers_temp["B"] + registers_temp["C"];
+          rp = "BC";
+        }
+        if (code_text_array[1] == "D") {
+          to_add = registers_temp["D"] + registers_temp["E"];
+          rp = "DE";
+        }
+        if (code_text_array[1] == "H") {
+          to_add = registers_temp["H"] + registers_temp["L"];
+          rp = "HL";
+        }
+
+        var carry = 0;
+        if (dec(registers_temp["L"]) + dec(to_add.slice(2)) > 255) {
+          carry = 1;
+          registers_temp["L"] = hex(
+            dec(registers_temp["L"]) + dec(to_add.slice(2))
+          ).slice(1);
+        } else {
+          registers_temp["L"] = hex(
+            dec(registers_temp["L"]) + dec(to_add)
+          ).slice(2);
+        }
+
+        registers_temp["H"] = hex(
+          dec(registers_temp["H"]) + dec(to_add.slice(0, 2)) + dec(carry)
+        ).toString();
+        if (registers_temp["H"].length > 2) {
+          registers_temp["H"] = registers_temp["H"].slice(1);
+        }
+
+        logs_temp.push({
+          type: "success",
+          code: code_text_array.join(" "),
+          message: `Added the data stored by register pair ${rp} i.e. ${to_add} to data in HL pair.`,
+        });
+      } else if (code_text_array[0] == "ANA") {
+        program_counter = inr(program_counter);
+        registers_temp.A = hex(
+          dec(registers_temp.A) & dec(registers_temp[code_text_array[1]])
+        );
+
+        logs_temp.push({
+          type: "success",
+          code: code_text_array.join(" "),
+          message: `ANDed the data stored by register ${
+            code_text_array[1]
+          } i.e. ${registers_temp[code_text_array[1]]} to data in Accumulator.`,
+        });
+      } else if (code_text_array[0] == "ORA") {
+        program_counter = inr(program_counter);
+        registers_temp.A = hex(
+          dec(registers_temp.A) | dec(registers_temp[code_text_array[1]])
+        );
+        logs_temp.push({
+          type: "success",
+          code: code_text_array.join(" "),
+          message: `ORed the data stored by register ${
+            code_text_array[1]
+          } i.e. ${registers_temp[code_text_array[1]]} to data in Accumulator.`,
+        });
+      } else if (code_text_array[0] == "XRA") {
+        program_counter = inr(program_counter);
+        registers_temp.A = hex(
+          dec(registers_temp.A) ^ dec(registers_temp[code_text_array[1]])
+        );
+        logs_temp.push({
+          type: "success",
+          code: code_text_array.join(" "),
+          message: `XORed the data stored by register ${
+            code_text_array[1]
+          } i.e. ${registers_temp[code_text_array[1]]} to data in Accumulator.`,
+        });
+      } else if (code_text_array[0] == "CMP") {
+        program_counter = inr(program_counter);
+        if (code_text_array[1] != "M") {
+          registers_temp[code_text_array[1]] = hex(
+            ~dec(registers_temp[code_text_array[1]]) >>> 0
+          ).slice(-2);
+
+          logs_temp.push({
+            type: "success",
+            code: code_text_array.join(" "),
+            message: `Complemented the data stored by register ${code_text_array[1]} .`,
+          });
+        } else {
+          memory[registers_temp.H + registers_temp.L] = hex(
+            ~dec(memory[registers_temp.H + registers_temp.L]) >>> 0
+          ).slice(-2);
+
+          logs_temp.push({
+            type: "success",
+            code: code_text_array.join(" "),
+            message: `Complemented the data stored by memory pointed by HL ${
+              registers_temp.H + registers_temp.L
+            } `,
+          });
+        }
+      } else if (code_text_array[0] == "ANI") {
+        program_counter = inr(program_counter);
+        registers_temp.A = hex(
+          dec(registers_temp.A) & dec(memory[program_counter])
+        );
+
+        logs_temp.push({
+          type: "success",
+          code: code_text_array.join(" "),
+          message: `ANDed the given data ${memory[program_counter]} to data in Accumulator.`,
+        });
+        program_counter = inr(program_counter);
+      } else if (code_text_array[0] == "ORI") {
+        program_counter = inr(program_counter);
+        registers_temp.A = hex(
+          dec(registers_temp.A) | dec(memory[program_counter])
+        );
+
+        logs_temp.push({
+          type: "success",
+          code: code_text_array.join(" "),
+          message: `ORed the given data ${memory[program_counter]} to data in Accumulator.`,
+        });
+        program_counter = inr(program_counter);
+      } else if (code_text_array[0] == "XRI") {
+        program_counter = inr(program_counter);
+        registers_temp.A = hex(
+          dec(registers_temp.A) ^ dec(memory[program_counter])
+        );
+
+        logs_temp.push({
+          type: "success",
+          code: code_text_array.join(" "),
+          message: `XORed the given data ${memory[program_counter]} to data in Accumulator.`,
+        });
+        program_counter = inr(program_counter);
       }
-      console.log("s");
+      console.log("Executing");
 
       memory_states_temp.push(JSON.parse(JSON.stringify(memory)));
       register_states_temp.push(JSON.parse(JSON.stringify(registers_temp)));
