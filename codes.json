@@ -1,4 +1,11 @@
-[
+[{
+  "label": "RC",
+  "opCode": "D8"
+},
+{
+  "label": "DI",
+  "opCode": "F3"
+},
     {
       "label": "ACI Data",
       "opCode": "CE"
@@ -255,10 +262,7 @@
       "label": "DCX SP",
       "opCode": "3B"
     },
-    {
-      "label": "DI",
-      "opCode": "F3"
-    },
+   
     {
       "label": "EI",
       "opCode": "FB"
@@ -759,10 +763,7 @@
       "label": "RAR",
       "opCode": "1F"
     },
-    {
-      "label": "RC",
-      "opCode": "D8"
-    },
+    
     {
       "label": "RET",
       "opCode": "C9"

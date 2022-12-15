@@ -1,10 +1,18 @@
-import styles from "../styles/Home.module.css";
 import { memo, useEffect, useState } from "react";
 import codes_json from "../codes";
 
 import Memory from "./Components/Memory";
 import Registers from "./Components/Registers";
-import { inr, hexCode, hex, checkSyntax, dec } from "../utils";
+import {
+  inr,
+  hexCode,
+  hex,
+  checkSyntax,
+  dec,
+  flagsStatus,
+  dcr,
+  format,
+} from "../utils";
 import CodeEditor from "./Components/CodeEditor";
 import Log from "./Components/Log";
 import Flag from "./Components/Flag";
@@ -18,6 +26,7 @@ export default function Home() {
     E: "00",
     H: "00",
     L: "00",
+    M: "00",
   };
   let initial_memory = {};
   const [registers, setRegisters] = useState(initial_registers);
@@ -40,20 +49,6 @@ export default function Home() {
     setFlags(flags_temp);
   }, [registers]);
   */
-
-  const flagSetter = (acc) => {
-    let flags_temp = { C: 0, AC: 0, P: 0, Z: 0, S: 0 };
-    if (Math.abs(acc).length == 3) {
-      flags_temp.C = 1;
-    }
-    if (dec(acc) < 0) {
-      flags_temp.S = 1;
-    }
-    if (dec(acc) == 0) {
-      flags_temp.Z = 1;
-    }
-    return flags_temp;
-  };
 
   useEffect(() => {
     if (Object.keys(memory).filter((m) => memory[m].length >= 3).length) {
@@ -86,7 +81,6 @@ export default function Home() {
       address = inr(address);
       if (hex_code.opCode == "EF") {
         setCompilationMemory(memory_temp);
-        console.log(memory_temp);
 
         return memory_temp;
       }
@@ -324,7 +318,6 @@ export default function Home() {
           });
         }
       } else if (code_text_array[0] == "LHLD") {
-        console.log("here");
         program_counter = inr(program_counter);
         let data_L = memory[
           memory[program_counter] + memory[inr(program_counter)]
@@ -336,7 +329,6 @@ export default function Home() {
         ]
           ? memory[inr(memory[program_counter] + memory[inr(program_counter)])]
           : "00";
-        console.log(data_H, data_L);
         registers_temp = {
           ...registers_temp,
           L: data_L,
@@ -446,17 +438,427 @@ export default function Home() {
         });
 
         program_counter = inr(inr(program_counter));
+      } else if (code_text_array[0] == "ADD") {
+        program_counter = inr(program_counter);
+        if (code_text_array[1] != "M") {
+          let to_add = registers_temp[code_text_array[1]];
+          if (dec(to_add.slice(1)) + dec(registers_temp["A"].slice(1)) > 15) {
+            flags_temp.AC = 1;
+          } else {
+            flags_temp.AC = 0;
+          }
+          registers_temp["A"] = hex(dec(to_add) + dec(registers_temp["A"]))
+            .padStart(2, "0")
+            .toUpperCase();
+          logs_temp.push({
+            type: "success",
+            code: code_text_array.join(" "),
+            message: `Added the content of register ${code_text_array[1]} i.e ${to_add} to Accumulator`,
+          });
+        } else {
+          let to_add = memory[registers_temp.H + registers_temp.L];
+          if (dec(to_add.slice(1)) + dec(registers_temp["A"].slice(1)) > 15) {
+            flags_temp.AC = 1;
+          } else {
+            flags_temp.AC = 0;
+          }
+          (registers_temp["A"] = hex(dec(to_add) + dec(registers_temp["A"]))),
+            padStart(2, "0").toUpperCase();
+          logs_temp.push({
+            type: "success",
+            code: code_text_array.join(" "),
+            message: `Added the content of memory location pointed by HL register (${
+              registers_temp.H + registers_temp.L
+            }) i.e ${to_add} to Accumulator`,
+          });
+        }
+      } else if (code_text_array[0] == "ADI") {
+        program_counter = inr(program_counter);
+        let to_add = memory[program_counter];
+        if (dec(to_add.slice(1)) + dec(registers_temp["A"].slice(1)) > 15) {
+          flags_temp.AC = 1;
+        } else {
+          flags_temp.AC = 0;
+        }
+        registers_temp["A"] = hex(dec(to_add) + dec(registers_temp["A"]))
+          .padStart(2, "0")
+          .toUpperCase();
+        logs_temp.push({
+          type: "success",
+          code: code_text_array.join(" "),
+          message: `Added the given  value  ${to_add} to Accumulator`,
+        });
+        program_counter = inr(program_counter);
+      } else if (code_text_array[0] == "ADC") {
+        program_counter = inr(program_counter);
+        if (code_text_array[1] != "M") {
+          let to_add = registers_temp[code_text_array[1]];
+
+          if (
+            dec(to_add.slice(1)) +
+              dec(registers_temp["A"].slice(1)) +
+              dec(flags_temp.C) >
+            15
+          ) {
+            flags_temp.AC = 1;
+          } else {
+            flags_temp.AC = 0;
+          }
+          registers_temp["A"] = hex(
+            dec(to_add) + dec(registers_temp["A"]) + dec(flags_temp.C)
+          )
+            .padStart(2, "0")
+            .toUpperCase();
+          logs_temp.push({
+            type: "success",
+            code: code_text_array.join(" "),
+            message: `Added the content of register ${code_text_array[1]} i.e ${to_add} and carry flag i.e ${flags_temp.C} to Accumulator`,
+          });
+        } else {
+          let to_add = memory[registers_temp.H + registers_temp.L];
+
+          if (
+            dec(to_add.slice(1)) +
+              dec(registers_temp["A"].slice(1)) +
+              dec(flags_temp.C) >
+            15
+          ) {
+            flags_temp.AC = 1;
+          } else {
+            flags_temp.AC = 0;
+          }
+          registers_temp["A"] = hex(
+            dec(to_add) + dec(registers_temp["A"]) + dec(flags_temp.C)
+          )
+            .padStart(2, "0")
+            .toUpperCase();
+          logs_temp.push({
+            type: "success",
+            code: code_text_array.join(" "),
+            message: `Added the content of memory location pointed by HL register (${
+              registers_temp.H + registers_temp.L
+            }) i.e ${to_add} and carry flag i.e ${flags_temp.C} to Accumulator`,
+          });
+        }
+      } else if (code_text_array[0] == "SUB") {
+        program_counter = inr(program_counter);
+
+        if (code_text_array[1] != "M") {
+          let to_sub = registers_temp[code_text_array[1]];
+          if (dec(to_sub.slice(1)) > dec(registers_temp.A.slice(1))) {
+            flags_temp.AC = 1;
+          } else {
+            flags_temp.AC = 0;
+          }
+          let acc_temp = registers_temp.A;
+          registers_temp.A = hex(Math.abs(dec(registers_temp.A) - dec(to_sub)))
+            .padStart(2, "0")
+            .toUpperCase();
+
+          if (dec(to_sub) > dec(acc_temp)) {
+            registers_temp.A = "1" + registers_temp.A.toString();
+          }
+
+          logs_temp.push({
+            type: "success",
+            code: code_text_array.join(" "),
+            message: `Subtracted the content of ${code_text_array[1]} i.e ${to_sub} from Accmulator.`,
+          });
+        } else {
+          let to_sub = memory[registers_temp.H + registers_temp.L];
+          if (dec(to_sub.slice(1)) > dec(registers_temp.A.slice(1))) {
+            flags_temp.AC = 1;
+          } else {
+            flags_temp.AC = 0;
+          }
+          let acc_temp = registers_temp.A;
+          registers_temp.A = hex(Math.abs(dec(registers_temp.A) - dec(to_sub)))
+            .padStart(2, "0")
+            .toUpperCase();
+
+          if (dec(to_sub) > dec(acc_temp)) {
+            registers_temp.A = "1" + registers_temp.A.toString();
+          }
+
+          logs_temp.push({
+            type: "success",
+            code: code_text_array.join(" "),
+            message: `Subtracted the content of memory pointed by HL(${
+              registers_temp.H + registers_temp.L
+            }) i.e ${to_sub} from Accmulator.`,
+          });
+        }
+      } else if (code_text_array[0] == "SUI") {
+        program_counter = inr(program_counter);
+
+        let to_sub = memory[program_counter];
+
+        if (dec(to_sub.slice(1)) > dec(registers_temp.A.slice(1))) {
+          flags_temp.AC = 1;
+        } else {
+          flags_temp.AC = 0;
+        }
+        let acc_temp = registers_temp.A;
+        registers_temp.A = hex(Math.abs(dec(registers_temp.A) - dec(to_sub)))
+          .padStart(2, "0")
+          .toUpperCase();
+
+        if (dec(to_sub) > dec(acc_temp)) {
+          registers_temp.A = "1" + registers_temp.A.toString();
+        }
+
+        logs_temp.push({
+          type: "success",
+          code: code_text_array.join(" "),
+          message: `Subtracted the given value ${to_sub} from Accmulator.`,
+        });
+        program_counter = inr(program_counter);
+      } else if (code_text_array[0] == "SBB") {
+        program_counter = inr(program_counter);
+        if (code_text_array[1] != "M") {
+          let to_sub = registers_temp[code_text_array[1]];
+          let carry = flags.C;
+          if (
+            dec(to_sub.slice(1)) >
+            dec(registers_temp.A.slice(1)) - dec(flags_temp.C)
+          ) {
+            flags_temp.AC = 1;
+          } else {
+            flags_temp.AC = 0;
+          }
+          let acc_temp = registers_temp.A;
+          registers_temp.A = hex(
+            Math.abs(dec(registers_temp.A) - dec(to_sub) - dec(flags_temp.C))
+          )
+            .padStart(2, "0")
+            .toUpperCase();
+
+          if (dec(to_sub) > dec(acc_temp) - dec(flags_temp.C)) {
+            registers_temp.A = "1" + registers_temp.A.toString();
+          }
+
+          logs_temp.push({
+            type: "success",
+            code: code_text_array.join(" "),
+            message: `Subtracted the content of ${code_text_array[1]} i.e ${to_sub} and carry i.e. ${flags_temp.C}from Accmulator.`,
+          });
+        } else {
+          let to_sub = memory[registers_temp.H + registers_temp.L];
+          let carry = flags.C;
+          if (
+            dec(to_sub.slice(1)) >
+            dec(registers_temp.A.slice(1)) - dec(flags_temp.C)
+          ) {
+            flags_temp.AC = 1;
+          } else {
+            flags_temp.AC = 0;
+          }
+          let acc_temp = registers_temp.A;
+          registers_temp.A = hex(
+            Math.abs(dec(registers_temp.A) - dec(to_sub) - dec(flags_temp.C))
+          )
+            .padStart(2, "0")
+            .toUpperCase();
+
+          if (dec(to_sub) > dec(acc_temp) - dec(flags_temp.C)) {
+            registers_temp.A = "1" + registers_temp.A.toString();
+          }
+
+          logs_temp.push({
+            type: "success",
+            code: code_text_array.join(" "),
+            message: `Subtracted the content of memory pointed by HL (${
+              registers_temp.H + registers_temp.L
+            })i.e ${to_sub} and carry i.e. ${flags_temp.C}from Accmulator.`,
+          });
+        }
+      } else if (code_text_array[0] == "INR") {
+        program_counter = inr(program_counter);
+        if (code_text_array[1] !== "M") {
+          registers_temp[code_text_array[1]] = inr(
+            registers_temp[code_text_array[1]]
+          );
+          logs_temp.push({
+            type: "success",
+            code: code_text_array.join(" "),
+            message: `Incremented the value of register ${
+              code_text_array[1]
+            }  by 1 i.e. now it is ${registers_temp[code_text_array[1]]}.`,
+          });
+        } else {
+          memory[registers_temp.H + registers_temp.L] = inr(
+            memory[registers_temp.H + registers_temp.L]
+              ? memory[registers_temp.H + registers_temp.L]
+              : "00"
+          );
+          logs_temp.push({
+            type: "success",
+            code: code_text_array.join(" "),
+            message: `Incremented the content of memory pointed by HL(${
+              registers_temp.H + registers_temp.L
+            })  by 1 i.e. now it is${
+              memory[registers_temp.H + registers_temp.L]
+            }`,
+          });
+        }
+      } else if (code_text_array[0] == "DCR") {
+        program_counter = inr(program_counter);
+        if (code_text_array[1] !== "M") {
+          registers_temp[code_text_array[1]] = dcr(
+            registers_temp[code_text_array[1]]
+          );
+          logs_temp.push({
+            type: "success",
+            code: code_text_array.join(" "),
+            message: `Decremented the value of register ${
+              code_text_array[1]
+            }  by 1 i.e. now it is i.e. ${registers_temp[code_text_array[1]]}`,
+          });
+        } else {
+          memory[registers_temp.H + registers_temp.L] = dcr(
+            memory[registers_temp.H + registers_temp.L]
+              ? memory[registers_temp.H + registers_temp.L]
+              : "00"
+          );
+          logs_temp.push({
+            type: "success",
+            code: code_text_array.join(" "),
+            message: `Decremented the content of memory pointed by HL(${
+              registers_temp.H + registers_temp.L
+            })  by 1 i.e now it is i.e. ${
+              memory[registers_temp.H + registers_temp.L]
+            }`,
+          });
+        }
+      } else if (code_text_array[0] == "INX") {
+        program_counter = inr(program_counter);
+        if (code_text_array[1] == "B") {
+          let content = hex(
+            inr(dec(registers_temp.B + registers_temp.C)) % 65535
+          );
+          registers_temp = {
+            ...registers_temp,
+            B: content.slice(0, 2),
+            C: content.slice(2),
+          };
+          logs_temp.push({
+            type: "success",
+            code: code_text_array.join(" "),
+            message: `Incremented the data of regester pair BC by 1. Now it stores ${
+              registers_temp["B"] + registers_temp["C"]
+            }`,
+          });
+        }
+        if (code_text_array[1] == "D") {
+          let content = hex(
+            inr(dec(registers_temp.D + registers_temp.E)) % 65535
+          );
+          registers_temp = {
+            ...registers_temp,
+            D: content.slice(0, 2),
+            E: content.slice(2),
+          };
+          logs_temp.push({
+            type: "success",
+            code: code_text_array.join(" "),
+            message: `Incremented the data of regester pair BC by 1. Now it stores ${
+              registers_temp["D"] + registers_temp["E"]
+            }`,
+          });
+        }
+        if (code_text_array[1] == "H") {
+          let content = hex(
+            inr(dec(registers_temp.H + registers_temp.L)) % 65535
+          );
+          registers_temp = {
+            ...registers_temp,
+            H: content.slice(0, 2),
+            L: content.slice(2),
+          };
+          logs_temp.push({
+            type: "success",
+            code: code_text_array.join(" "),
+            message: `Incremented the data of regester pair BC by 1. Now it stores ${
+              registers_temp["H"] + registers_temp["L"]
+            }`,
+          });
+        }
+      } else if (code_text_array[0] == "DCX") {
+        program_counter = inr(program_counter);
+        if (code_text_array[1] == "B") {
+          let content = hex(
+            dcr(dec(registers_temp.B + registers_temp.C)) % 65535
+          );
+          registers_temp = {
+            ...registers_temp,
+            B: content.slice(0, 2),
+            C: content.slice(2),
+          };
+          logs_temp.push({
+            type: "success",
+            code: code_text_array.join(" "),
+            message: `Decremented the data of regester pair BC by 1. Now it stores ${
+              registers_temp["B"] + registers_temp["C"]
+            }`,
+          });
+        }
+        if (code_text_array[1] == "D") {
+          let content = hex(
+            dcr(dec(registers_temp.D + registers_temp.E)) % 65535
+          );
+          registers_temp = {
+            ...registers_temp,
+            D: content.slice(0, 2),
+            E: content.slice(2),
+          };
+          logs_temp.push({
+            type: "success",
+            code: code_text_array.join(" "),
+            message: `Decremented the data of regester pair BC by 1. Now it stores ${
+              registers_temp["D"] + registers_temp["E"]
+            }`,
+          });
+        }
+        if (code_text_array[1] == "H") {
+          let content = hex(
+            dcr(dec(registers_temp.H + registers_temp.L)) % 65535
+          );
+          registers_temp = {
+            ...registers_temp,
+            H: content.slice(0, 2),
+            L: content.slice(2),
+          };
+          logs_temp.push({
+            type: "success",
+            code: code_text_array.join(" "),
+            message: `Decremented the data of regester pair BC by 1. Now it stores ${
+              registers_temp["H"] + registers_temp["L"]
+            }`,
+          });
+        }
       }
+      console.log("s");
+
       memory_states_temp.push(JSON.parse(JSON.stringify(memory)));
       register_states_temp.push(JSON.parse(JSON.stringify(registers_temp)));
-      flags_temp = flagSetter(registers_temp["A"]);
+      let ac_flag = flagsStatus(flags_temp, registers_temp["A"]);
+      flags_temp = ac_flag.flags;
+      registers_temp["A"] = ac_flag.acc;
+      registers_temp["M"] = memory[registers_temp.H + registers_temp.L]
+        ? memory[registers_temp.H + registers_temp.L]
+        : "00";
     }
+    memory = format(memory);
     setMemory(memory);
-    setRegisters(registers_temp);
     setLogs(logs_temp);
+    for (let i in memory_states_temp) {
+      memory_states_temp[i] = format(memory_states_temp[i]);
+    }
     setMemoryStates(memory_states_temp);
     setRegisterStates(register_states_temp);
+
     setFlags(flags_temp);
+    setRegisters(format(registers_temp));
   };
 
   return (

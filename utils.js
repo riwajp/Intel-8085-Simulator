@@ -4,7 +4,7 @@ const dec = (hex) => {
 };
 
 const hex = (decimal) => {
-  return decimal.toString(16);
+  return decimal.toString(16).toUpperCase();
 };
 
 const isHex = (hex, size) => {
@@ -20,6 +20,15 @@ const inr = (hx) => {
     .padStart(hx.length, "0")
     .toUpperCase();
 };
+const dcr = (hx) => {
+  if (hx.toString().toUpperCase() == "0000") {
+    return 0xffff;
+  }
+
+  return hex(dec(hx) - 1)
+    .padStart(hx.length, "0")
+    .toUpperCase();
+};
 
 const hexCode = (code) => {
   var opCodes = [];
@@ -28,6 +37,7 @@ const hexCode = (code) => {
     let json_code_formatted = c.label
       .replace("Data", "")
       .replace("Address", "")
+      .replace("Port-address", "")
       .split(" ")
       .join("")
       .toUpperCase();
@@ -41,7 +51,7 @@ const hexCode = (code) => {
       });
     }
   }
-
+  console.log(JSON.stringify(opCodes));
   return opCodes.length ? opCodes[opCodes.length - 1] : 0;
 };
 
@@ -75,7 +85,7 @@ const checkSyntax = (code) => {
     }
   }
 
-  if (command == "LXI") {
+  if (command == "LXI" || command == "INX" || command == "DCX") {
     if (code_array[1] == "B" || code_array[1] == "D" || code_array[1] == "H") {
       return code_array;
     } else {
@@ -108,18 +118,69 @@ const checkSyntax = (code) => {
     return code_array;
   }
 
-  /*
-  if (command == "ADD" || command == "ADC" || command == "SUB") {
+  if (
+    command == "ADD" ||
+    command == "ADC" ||
+    command == "SUB" ||
+    command == "SBB"
+  ) {
     if (registers.includes(code_array[1])) {
       return code_array;
     } else {
-      error_message = "The argument must be a register.";
+      error_message = "The argument must be a register or memory.";
     }
   }
-*/
+
+  if (command == "INR" || command == "DCR") {
+    if (registers.includes(code_array[1])) {
+      return code_array;
+    } else {
+      error_message = "The argumentt must be a register or memory.";
+    }
+  }
+  if (command == "ADI" || command == "SUI") {
+    if (isHex(code_array[1], 2) && code_array[1].length == 2) {
+      return code_array;
+    } else {
+      error_message = "The argument must be a 8 bit data.";
+    }
+  }
   if (command == "HLT") {
     return code_array;
   }
   return error_message;
 };
-export { hex, dec, isHex, inr, hexCode, checkSyntax };
+
+const flagsStatus = (flags, acc) => {
+  let binary_eqv = parseInt(acc, 16).toString(2).padStart(8, "0");
+  let acc_temp = acc;
+  if (acc.length == 3) {
+    flags.C = 1;
+    acc = acc.slice(1);
+  }
+  if (dec(acc) == 0) {
+    flags.Z = 1;
+  } else {
+    flags.Z = 0;
+  }
+  if (acc_temp.charAt(0) == "0" && flags.S == 0) {
+    flags.S = 0;
+  } else {
+    flags.S = 1;
+  }
+
+  if (binary_eqv.split("").filter((e) => e == "1").length % 2 == 0) {
+    flags.P = 1;
+  } else {
+    flags.P = 0;
+  }
+  return { flags, acc };
+};
+
+const format = (obj) => {
+  for (let k of Object.keys(obj)) {
+    obj[k] = obj[k].toString().toUpperCase().padStart(2, "0");
+  }
+  return obj;
+};
+export { hex, dec, isHex, inr, dcr, hexCode, checkSyntax, flagsStatus, format };
