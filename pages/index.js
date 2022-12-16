@@ -700,6 +700,12 @@ export default function Home() {
               memory[registers_temp.H + registers_temp.L]
             }`,
           });
+          let ac_flag = flagsStatus(
+            flags_temp,
+            registers_temp[code_text_array[1]]
+          );
+          flags_temp = ac_flag.flags;
+          registers_temp[code_text_array[1]] = ac_flag.acc;
         }
       } else if (code_text_array[0] == "DCR") {
         program_counter = inr(program_counter);
@@ -729,6 +735,12 @@ export default function Home() {
               memory[registers_temp.H + registers_temp.L]
             }`,
           });
+          let ac_flag = flagsStatus(
+            flags_temp,
+            registers_temp[code_text_array[1]]
+          );
+          flags_temp = ac_flag.flags;
+          registers_temp[code_text_array[1]] = ac_flag.acc;
         }
       } else if (code_text_array[0] == "INX") {
         program_counter = inr(program_counter);
@@ -975,6 +987,10 @@ export default function Home() {
           message: `XORed the given data ${memory[program_counter]} to data in Accumulator.`,
         });
         program_counter = inr(program_counter);
+      } else {
+        let ac_flag = flagsStatus(flags_temp, registers_temp["A"]);
+        flags_temp = ac_flag.flags;
+        registers_temp["A"] = ac_flag.acc;
       }
       console.log("Executing");
 
