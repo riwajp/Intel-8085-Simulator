@@ -56,6 +56,7 @@ const CodeEditor = ({ execute, setCurrentAddress, current_address }) => {
           <br /> MVI M 32
           <br /> MVI L 01
           <br /> MVI M 7A <br />
+          <br />
           LHLD 9500 <br />
           HLT
         </div>

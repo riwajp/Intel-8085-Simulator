@@ -55,115 +55,146 @@ const hexCode = (code) => {
 };
 
 const checkSyntax = (code) => {
-  let code_array = code.replace(/\s+/g, " ").split(" ");
+  const verify = (code) => {
+    let code_array = code.replace(/\s+/g, " ").trim().split(" ");
 
-  let registers = ["A", "B", "C", "D", "E", "H", "L", "M"];
-  let command = code_array[0];
-  var error_message = "The given command doesn't exist.";
+    let registers = ["A", "B", "C", "D", "E", "H", "L", "M"];
+    let command = code_array[0];
+    var error_message = "The given command doesn't exist.";
 
-  if (command == "MVI") {
+    if (command == "MVI") {
+      if (
+        registers.includes(code_array[1]) &&
+        isHex(code_array[2], 2) &&
+        code_array[2].length == 2
+      ) {
+        return code_array;
+      } else {
+        error_message = "The arguments must be a register and a 8-bit data";
+      }
+    }
+
+    if (command == "MOV") {
+      if (
+        registers.includes(code_array[1]) &&
+        registers.includes(code_array[2]) &&
+        code_array.length == 3
+      ) {
+        return code_array;
+      } else {
+        error_message = "The arguments must be two registers.";
+      }
+    }
+
+    if (command == "INX" || command == "DCX" || command == "DAD") {
+      if (
+        code_array.length == 2 &&
+        (code_array[1] == "B" || code_array[1] == "D" || code_array[1] == "H")
+      ) {
+        return code_array;
+      } else {
+        error_message = "The arguments must be register pair (B, D or H).";
+      }
+    }
+    if (command == "LXI") {
+      if (
+        code_array.length == 3 &&
+        (code_array[1] == "B" ||
+          code_array[1] == "D" ||
+          code_array[1] == "H") &&
+        isHex(code_array[2], 4) &&
+        code_array[2].length == 4
+      ) {
+        return code_array;
+      } else {
+        error_message =
+          "The arguments must be a register pair(B, D or H) and 16 bit data";
+      }
+    }
+    if (command == "LDAX" || command == "STAX") {
+      if (
+        code_array.length == 2 &&
+        (code_array[1] == "B" || code_array[1] == "D")
+      ) {
+        return code_array;
+      } else {
+        error_message = "The arguments must be register pair B or D.";
+      }
+    }
+
     if (
-      registers.includes(code_array[1]) &&
-      isHex(code_array[2], 2) &&
-      code_array[2].length == 2
+      command == "LHLD" ||
+      command == "SHLD" ||
+      command == "LDA" ||
+      command == "STA"
     ) {
-      return code_array;
-    } else {
-      error_message = "The arguments must be a register and a 8-bit data";
+      if (
+        code_array.length == 2 &&
+        isHex(code_array[1], 4) &&
+        code_array[1].length == 4
+      ) {
+        return code_array;
+      } else {
+        error_message = "The argument must be a 16-bit address.";
+      }
     }
-  }
 
-  if (command == "MOV") {
+    if (command == "XCHG" || command == "CMA") {
+      if (code_array.length == 1) {
+        return code_array;
+      } else {
+        error_message = "The given command doesn't take any arguments.";
+      }
+    }
+
     if (
-      registers.includes(code_array[1]) &&
-      registers.includes(code_array[2])
+      command == "ADD" ||
+      command == "ADC" ||
+      command == "SUB" ||
+      command == "SBB" ||
+      command == "ANA" ||
+      command == "XRA" ||
+      command == "ORA" ||
+      command == "CMP"
     ) {
-      return code_array;
-    } else {
-      error_message = "The arguments must be two registers.";
+      if (registers.includes(code_array[1]) && code_array.length == 2) {
+        return code_array;
+      } else {
+        error_message = "The argument must be a register or memory.";
+      }
     }
-  }
 
-  if (
-    command == "LXI" ||
-    command == "INX" ||
-    command == "DCX" ||
-    command == "DAD"
-  ) {
-    if (code_array[1] == "B" || code_array[1] == "D" || code_array[1] == "H") {
-      return code_array;
-    } else {
-      error_message = "The arguments must be register pair (B, D or H).";
+    if (command == "INR" || command == "DCR") {
+      if (registers.includes(code_array[1]) && code_array.length == 2) {
+        return code_array;
+      } else {
+        error_message = "The argumentt must be a register or memory.";
+      }
     }
-  }
-
-  if (command == "LDAX" || command == "STAX") {
-    if (code_array[1] == "B" || code_array[1] == "D") {
-      return code_array;
-    } else {
-      error_message = "The arguments must be register pair B or D.";
+    if (
+      command == "ADI" ||
+      command == "SUI" ||
+      command == "ANI" ||
+      command == "ORI" ||
+      command == "XRI" ||
+      command == "CPI"
+    ) {
+      if (
+        isHex(code_array[1], 2) &&
+        code_array[1].length == 2 &&
+        code_array.length == 2
+      ) {
+        return code_array;
+      } else {
+        error_message = "The argument must be a 8 bit data.";
+      }
     }
-  }
-
-  if (
-    command == "LHLD" ||
-    command == "SHLD" ||
-    command == "LDA" ||
-    command == "STA"
-  ) {
-    if (isHex(code_array[1], 4) && code_array[1].length == 4) {
+    if (command == "HLT") {
       return code_array;
-    } else {
-      error_message = "The argument must be a 16-bit address.";
     }
-  }
-
-  if (command == "XCHG") {
-    return code_array;
-  }
-
-  if (
-    command == "ADD" ||
-    command == "ADC" ||
-    command == "SUB" ||
-    command == "SBB" ||
-    command == "ANA" ||
-    command == "XRA" ||
-    command == "ORA" ||
-    command == "CMP"
-  ) {
-    if (registers.includes(code_array[1])) {
-      return code_array;
-    } else {
-      error_message = "The argument must be a register or memory.";
-    }
-  }
-
-  if (command == "INR" || command == "DCR") {
-    if (registers.includes(code_array[1])) {
-      return code_array;
-    } else {
-      error_message = "The argumentt must be a register or memory.";
-    }
-  }
-  if (
-    command == "ADI" ||
-    command == "SUI" ||
-    command == "ANI" ||
-    command == "ORI" ||
-    command == "XRI" ||
-    command == "CPI"
-  ) {
-    if (isHex(code_array[1], 2) && code_array[1].length == 2) {
-      return code_array;
-    } else {
-      error_message = "The argument must be a 8 bit data.";
-    }
-  }
-  if (command == "HLT") {
-    return code_array;
-  }
-  return error_message;
+    return error_message;
+  };
+  return verify(code);
 };
 
 const flagsStatus = (flags, acc) => {
@@ -184,7 +215,10 @@ const flagsStatus = (flags, acc) => {
     flags.S = 1;
   }
 
-  if (binary_eqv.split("").filter((e) => e == "1").length % 2 == 0) {
+  if (
+    binary_eqv.split("").filter((e) => e == "1").length % 2 == 0 &&
+    binary_eqv.split("").filter((e) => e == "1").length != 0
+  ) {
     flags.P = 1;
   } else {
     flags.P = 0;

@@ -6,6 +6,8 @@ const Log = ({
   memory_states,
   setRegisters,
   register_states,
+  setFlags,
+  flags_states,
 }) => {
   const [active_index, setActiveIndex] = useState();
   useEffect(() => {
@@ -21,6 +23,7 @@ const Log = ({
             onClick={() => {
               setMemory(memory_states[i]);
               setRegisters(register_states[i]);
+              setFlags(flags_states[i]);
               setActiveIndex(i);
             }}
           >

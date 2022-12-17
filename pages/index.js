@@ -38,6 +38,8 @@ export default function Home() {
   const [register_states, setRegisterStates] = useState([]);
   const [compilation_memory, setCompilationMemory] = useState({});
   const [flags, setFlags] = useState({ C: 0, AC: 0, P: 0, Z: 0, S: 0 });
+  const [flags_states, setFlagsStates] = useState([]);
+
   //load the program into the memory============================================================
 
   /*
@@ -88,11 +90,12 @@ export default function Home() {
       if (hex_code.data != "") {
         memory_temp[address] = hex_code.data.substring(0, 2);
 
-        address = inr(address);
         if (hex_code.data.length == 4) {
           memory_temp[address] = hex_code.data.substring(2, 5);
           address = inr(address);
+          memory_temp[address] = hex_code.data.substring(0, 2);
         }
+        address = inr(address);
       }
     }
     setMemory(memory_temp);
@@ -102,6 +105,7 @@ export default function Home() {
 
   //Execute the code ============================================================
   const execute = (code) => {
+    let labels = {};
     let logs_temp = [];
     let memory = load(code.toUpperCase().trim());
 
@@ -114,6 +118,7 @@ export default function Home() {
     var program_counter = current_address;
     let register_states_temp = [];
     let memory_states_temp = [];
+    let flags_states_temp = [];
     let flags_temp = { C: 0, AC: 0, P: 0, Z: 0, S: 0 };
     while (memory[program_counter] != "EF") {
       try {
@@ -236,42 +241,42 @@ export default function Home() {
         if (code_text_array[1] == "B") {
           registers_temp = {
             ...registers_temp,
-            B: memory[program_counter],
-            C: memory[inr(program_counter)],
+            B: memory[inr(program_counter)],
+            C: memory[program_counter],
           };
           logs_temp.push({
             type: "success",
             code: code_text_array.join(" "),
-            message: `Loaded the given data ${memory[program_counter]}${
-              memory[inr(program_counter)]
+            message: `Loaded the given data ${memory[inr(program_counter)]}${
+              memory[program_counter]
             } into BC register pair.`,
           });
         }
         if (code_text_array[1] == "D") {
           registers_temp = {
             ...registers_temp,
-            D: memory[program_counter],
-            E: memory[inr(program_counter)],
+            D: memory[inr(program_counter)],
+            E: memory[program_counter],
           };
           logs_temp.push({
             type: "success",
             code: code_text_array.join(" "),
-            message: `Loaded the given data ${memory[program_counter]}${
-              memory[inr(program_counter)]
+            message: `Loaded the given data ${memory[inr(program_counter)]}${
+              memory[program_counter]
             } into DE register pair.`,
           });
         }
         if (code_text_array[1] == "H") {
           registers_temp = {
             ...registers_temp,
-            H: memory[program_counter],
-            L: memory[inr(program_counter)],
+            H: memory[inr(program_counter)],
+            L: memory[program_counter],
           };
           logs_temp.push({
             type: "success",
             code: code_text_array.join(" "),
-            message: `Loaded the given data ${memory[program_counter]}${
-              memory[inr(program_counter)]
+            message: `Loaded the given data ${memory[inr(program_counter)]}${
+              memory[program_counter]
             } into HL register pair.`,
           });
         }
@@ -540,6 +545,32 @@ export default function Home() {
             }) i.e ${to_add} and carry flag i.e ${flags_temp.C} to Accumulator`,
           });
         }
+      } else if (code_text_array[0] == "ACI") {
+        program_counter = inr(program_counter);
+
+        let to_add = memory[program_counter];
+
+        if (
+          dec(to_add.slice(1)) +
+            dec(registers_temp["A"].slice(1)) +
+            dec(flags_temp.C) >
+          15
+        ) {
+          flags_temp.AC = 1;
+        } else {
+          flags_temp.AC = 0;
+        }
+        registers_temp["A"] = hex(
+          dec(to_add) + dec(registers_temp["A"]) + dec(flags_temp.C)
+        )
+          .padStart(2, "0")
+          .toUpperCase();
+        logs_temp.push({
+          type: "success",
+          code: code_text_array.join(" "),
+          message: `Added the given data ${memory[program_counter]} and carry flag i.e ${flags_temp.C} to Accumulator`,
+        });
+        program_counter = inr(program_counter);
       } else if (code_text_array[0] == "SUB") {
         program_counter = inr(program_counter);
 
@@ -672,6 +703,35 @@ export default function Home() {
             })i.e ${to_sub} and carry i.e. ${flags_temp.C}from Accmulator.`,
           });
         }
+      } else if (code_text_array[0] == "SBI") {
+        program_counter = inr(program_counter);
+
+        let to_sub = memory[program_counter];
+        let carry = flags.C;
+        if (
+          dec(to_sub.slice(1)) >
+          dec(registers_temp.A.slice(1)) - dec(flags_temp.C)
+        ) {
+          flags_temp.AC = 1;
+        } else {
+          flags_temp.AC = 0;
+        }
+        let acc_temp = registers_temp.A;
+        registers_temp.A = hex(
+          Math.abs(dec(registers_temp.A) - dec(to_sub) - dec(flags_temp.C))
+        )
+          .padStart(2, "0")
+          .toUpperCase();
+
+        if (dec(to_sub) > dec(acc_temp) - dec(flags_temp.C)) {
+          registers_temp.A = "1" + registers_temp.A.toString();
+        }
+
+        logs_temp.push({
+          type: "success",
+          code: code_text_array.join(" "),
+          message: `Subtracted the given data ${to_sub} and carry i.e. ${flags_temp.C}from Accmulator.`,
+        });
       } else if (code_text_array[0] == "INR") {
         program_counter = inr(program_counter);
         if (code_text_array[1] !== "M") {
@@ -928,29 +988,89 @@ export default function Home() {
         });
       } else if (code_text_array[0] == "CMP") {
         program_counter = inr(program_counter);
+        var difference;
+
         if (code_text_array[1] != "M") {
-          registers_temp[code_text_array[1]] = hex(
-            ~dec(registers_temp[code_text_array[1]]) >>> 0
-          ).slice(-2);
+          let to_sub = registers_temp[code_text_array[1]];
+          if (dec(to_sub.slice(1)) > dec(registers_temp.A.slice(1))) {
+            flags_temp.AC = 1;
+          } else {
+            flags_temp.AC = 0;
+          }
+
+          difference = hex(Math.abs(dec(registers_temp.A) - dec(to_sub)))
+            .padStart(2, "0")
+            .toUpperCase();
+
+          if (dec(to_sub) > dec(registers_temp.A)) {
+            difference = "1" + difference.toString();
+          }
 
           logs_temp.push({
             type: "success",
             code: code_text_array.join(" "),
-            message: `Complemented the data stored by register ${code_text_array[1]} .`,
+            message: `Compared`,
           });
         } else {
-          memory[registers_temp.H + registers_temp.L] = hex(
-            ~dec(memory[registers_temp.H + registers_temp.L]) >>> 0
-          ).slice(-2);
+          let to_sub = memory[registers_temp.H + registers_temp.L];
+          if (dec(to_sub.slice(1)) > dec(registers_temp.A.slice(1))) {
+            flags_temp.AC = 1;
+          } else {
+            flags_temp.AC = 0;
+          }
+
+          difference = hex(Math.abs(dec(registers_temp.A) - dec(to_sub)))
+            .padStart(2, "0")
+            .toUpperCase();
+
+          if (dec(to_sub) > dec(registers_temp.A)) {
+            difference = "1" + registers_temp.A.toString();
+          }
 
           logs_temp.push({
             type: "success",
             code: code_text_array.join(" "),
-            message: `Complemented the data stored by memory pointed by HL ${
-              registers_temp.H + registers_temp.L
-            } `,
+            message: `Compared memory`,
           });
         }
+        let ac_flag = flagsStatus(flags_temp, difference);
+        flags_temp = ac_flag.flags;
+      } else if (code_text_array[0] == "CPI") {
+        program_counter = inr(program_counter);
+        var difference;
+        let to_sub = memory[program_counter];
+        if (dec(to_sub.slice(1)) > dec(registers_temp.A.slice(1))) {
+          flags_temp.AC = 1;
+        } else {
+          flags_temp.AC = 0;
+        }
+
+        difference = hex(Math.abs(dec(registers_temp.A) - dec(to_sub)))
+          .padStart(2, "0")
+          .toUpperCase();
+
+        if (dec(to_sub) > dec(registers_temp.A)) {
+          difference = "1" + registers_temp.A.toString();
+        }
+
+        let ac_flag = flagsStatus(flags_temp, difference);
+        flags_temp = ac_flag.flags;
+        program_counter = inr(program_counter);
+        logs_temp.push({
+          type: "success",
+          code: code_text_array.join(" "),
+          message: `Compared immediate`,
+        });
+      } else if (code_text_array[0] == "CMA") {
+        program_counter = inr(program_counter);
+
+        registers_temp["A"] = hex(~dec(registers_temp["A"]) >>> 0).slice(-2);
+
+        logs_temp.push({
+          type: "success",
+          code: code_text_array.join(" "),
+          message: `Complemented the data stored by Accumulator .`,
+        });
       } else if (code_text_array[0] == "ANI") {
         program_counter = inr(program_counter);
         registers_temp.A = hex(
@@ -987,33 +1107,51 @@ export default function Home() {
           message: `XORed the given data ${memory[program_counter]} to data in Accumulator.`,
         });
         program_counter = inr(program_counter);
-      } else {
+      }
+      console.log("Executing");
+      let flag_affect_acc = [
+        "ADD",
+        "ADI",
+        "ADC",
+        "SUB",
+        "SUI",
+        "SBB",
+        "ANA",
+        "DAD",
+        "ORA",
+        "XRA",
+        "CMA",
+        "ANI",
+        "ORI",
+        "XRI",
+      ];
+      if (flag_affect_acc.includes(code_text_array[0])) {
         let ac_flag = flagsStatus(flags_temp, registers_temp["A"]);
         flags_temp = ac_flag.flags;
         registers_temp["A"] = ac_flag.acc;
       }
-      console.log("Executing");
 
       memory_states_temp.push(JSON.parse(JSON.stringify(memory)));
       register_states_temp.push(JSON.parse(JSON.stringify(registers_temp)));
-      let ac_flag = flagsStatus(flags_temp, registers_temp["A"]);
-      flags_temp = ac_flag.flags;
-      registers_temp["A"] = ac_flag.acc;
+      flags_states_temp.push(JSON.parse(JSON.stringify(flags_temp)));
+
       registers_temp["M"] = memory[registers_temp.H + registers_temp.L]
         ? memory[registers_temp.H + registers_temp.L]
         : "00";
-    }
-    memory = format(memory);
-    setMemory(memory);
-    setLogs(logs_temp);
-    for (let i in memory_states_temp) {
-      memory_states_temp[i] = format(memory_states_temp[i]);
-    }
-    setMemoryStates(memory_states_temp);
-    setRegisterStates(register_states_temp);
 
-    setFlags(flags_temp);
-    setRegisters(format(registers_temp));
+      memory = format(memory);
+      setMemory(memory);
+      setLogs(logs_temp);
+      for (let i in memory_states_temp) {
+        memory_states_temp[i] = format(memory_states_temp[i]);
+      }
+      setMemoryStates(memory_states_temp);
+      setRegisterStates(register_states_temp);
+
+      setFlags(flags_temp);
+      setRegisters(format(registers_temp));
+      setFlagsStates(flags_states_temp);
+    }
   };
 
   return (
@@ -1037,6 +1175,8 @@ export default function Home() {
           setRegisters={setRegisters}
           register_states={register_states}
           memory_states={memory_states}
+          flags_states={flags_states}
+          setFlags={setFlags}
         />
         <Flag flags={flags} />
       </div>
