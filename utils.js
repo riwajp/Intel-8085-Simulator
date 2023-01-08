@@ -15,6 +15,9 @@ const inr = (hx) => {
   if (hx.toString().toUpperCase() == "FFFF") {
     return 0x0000;
   }
+  if (hx.toString().toUpperCase() == "FF") {
+    return 0x00;
+  }
 
   return hex(dec(hx) + 1)
     .padStart(hx.length, "0")
@@ -24,7 +27,9 @@ const dcr = (hx) => {
   if (hx.toString().toUpperCase() == "0000") {
     return 0xffff;
   }
-
+  if (hx.toString().toUpperCase() == "00") {
+    return 0xff;
+  }
   return hex(dec(hx) - 1)
     .padStart(hx.length, "0")
     .toUpperCase();
@@ -38,6 +43,7 @@ const hexCode = (code) => {
       .replace("Data", "")
       .replace("Address", "")
       .replace("Port-address", "")
+      .replace("Label", "")
       .split(" ")
       .join("")
       .toUpperCase();
@@ -54,8 +60,8 @@ const hexCode = (code) => {
   return opCodes.length ? opCodes[opCodes.length - 1] : 0;
 };
 
-const checkSyntax = (code) => {
-  const verify = (code) => {
+const checkSyntax = (code, labels) => {
+  const verify = (code, labels) => {
     let code_array = code.replace(/\s+/g, " ").trim().split(" ");
 
     let registers = ["A", "B", "C", "D", "E", "H", "L", "M"];
@@ -174,6 +180,8 @@ const checkSyntax = (code) => {
     if (
       command == "ADI" ||
       command == "SUI" ||
+      command == "SBI" ||
+      command == "ACI" ||
       command == "ANI" ||
       command == "ORI" ||
       command == "XRI" ||
@@ -189,12 +197,28 @@ const checkSyntax = (code) => {
         error_message = "The argument must be a 8 bit data.";
       }
     }
+
+    if (
+      ["JMP", "JC", "JNC", "JZ", "JNZ", "JP", "JM", "JPE", "JPO"].includes(
+        command
+      )
+    ) {
+      if (code_array.length == 2) {
+        if (Object.keys(labels).includes(code_array[1])) {
+          return code_array;
+        } else {
+          error_message = "Given label not defined.";
+        }
+      } else {
+        error_message = "The argument  must be a label.";
+      }
+    }
     if (command == "HLT") {
       return code_array;
     }
     return error_message;
   };
-  return verify(code);
+  return verify(code, labels);
 };
 
 const flagsStatus = (flags, acc) => {
@@ -223,6 +247,7 @@ const flagsStatus = (flags, acc) => {
   } else {
     flags.P = 0;
   }
+
   return { flags, acc };
 };
 

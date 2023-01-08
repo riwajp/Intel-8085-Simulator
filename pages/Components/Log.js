@@ -28,7 +28,7 @@ const Log = ({
             }}
           >
             <span>
-              <span className="log-line">Line {i + 1}</span>
+              <span className="log-line">Line {parseInt(l.line) + 1}</span>
               <span className={`${l.type}`}> {l.message}</span>
             </span>
           </div>

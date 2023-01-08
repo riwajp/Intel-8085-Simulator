@@ -1,6 +1,12 @@
 import React, { useRef, useState, useEffect } from "react";
 
-const CodeEditor = ({ execute, setCurrentAddress, current_address }) => {
+const CodeEditor = ({
+  execute,
+  setCurrentAddress,
+  current_address,
+  speed,
+  setSpeed,
+}) => {
   let handleChange = (val) => {
     if (val.length <= 4) {
       setCurrentAddress(val);
@@ -34,6 +40,15 @@ const CodeEditor = ({ execute, setCurrentAddress, current_address }) => {
             className="address-input"
           />
         </div>
+
+        <div className="start-from-container">
+          <div className="address-label">Speed</div>
+          <input
+            onChange={(e) => setSpeed(e.target.value)}
+            value={speed}
+            className="address-input"
+          />
+        </div>
         <button
           onClick={() => execute(div_ref.current.innerText)}
           className="execute-button"
@@ -51,6 +66,7 @@ const CodeEditor = ({ execute, setCurrentAddress, current_address }) => {
           contentEditable={true}
           ref={div_ref}
           className="code-editor-editable"
+          spellCheck={false}
         >
           LXI H 9500
           <br /> MVI M 32

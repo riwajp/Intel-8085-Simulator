@@ -1,7 +1,7 @@
 import React from "react";
 import { dec } from "../../utils";
 
-function Memory({ memory, compilation_memory }) {
+function Memory({ memory, compilation_memory, user_memory }) {
   return (
     <div className="memory-container">
       <div className="memory-container-title">Memory</div>
@@ -16,7 +16,8 @@ function Memory({ memory, compilation_memory }) {
             <div
               className={`memory-element ${
                 Object.keys(compilation_memory).includes(m) ? "compilation" : ""
-              }`}
+              }  
+                ${Object.keys(user_memory).includes(m) ? "user-memory" : ""}`}
             >
               <div className="memory-address">
                 {m.toUpperCase().padStart(4, "0")}
