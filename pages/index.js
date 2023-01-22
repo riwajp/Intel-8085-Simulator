@@ -409,13 +409,14 @@ export default function Home() {
 
         program_counter = inr(inr(program_counter));
       } else if (code_text_array[0] == "LDA") {
+        program_counter = inr(program_counter);
+
         let data = memory[
-          memory[program_counter] + memory[inr(program_counter)]
+          memory[inr(program_counter)] + memory[program_counter]
         ]
-          ? memory[memory[program_counter] + memory[inr(program_counter)]]
+          ? memory[memory[inr(program_counter)] + memory[program_counter]]
           : "00";
 
-        program_counter = inr(program_counter);
         registers_temp = {
           ...registers_temp,
           A: data,
@@ -424,7 +425,7 @@ export default function Home() {
           type: "success",
           code: code_text_array.join(" "),
           message: `Loaded the data stored in given memory location ${
-            memory[program_counter] + memory[inr(program_counter)]
+            memory[inr(program_counter)] + memory[program_counter]
           } i.e ${data} into register A.`,
         });
         program_counter = inr(inr(program_counter));
@@ -459,14 +460,29 @@ export default function Home() {
               registers_temp["D"] + registers_temp["E"]
             }.)`,
           });
+        } else if (code_text_array[1] == "H") {
+          memory = {
+            ...memory,
+            [registers_temp["H"] + registers_temp["L"]]: registers_temp["A"],
+          };
+
+          logs_temp.push({
+            type: "success",
+            code: code_text_array.join(" "),
+            message: `Stored th data in register A(${
+              registers_temp["A"]
+            } into memory location pointed by HL register pair i.e ${
+              registers_temp["H"] + registers_temp["L"]
+            }.)`,
+          });
         }
       } else if (code_text_array[0] == "SHLD") {
         program_counter = inr(program_counter);
         memory = {
           ...memory,
-          [memory[program_counter] + memory[inr(program_counter)]]:
+          [memory[inr(program_counter)] + memory[program_counter]]:
             registers_temp["L"],
-          [inr(memory[program_counter] + memory[inr(program_counter)])]:
+          [inr(memory[inr(program_counter)] + memory[program_counter])]:
             registers_temp["H"],
         };
         logs_temp.push({
@@ -478,9 +494,9 @@ export default function Home() {
             memory[program_counter] + memory[inr(program_counter)]
           } and content of register H(${
             registers_temp["L"]
-          } in memory location ${inr(
-            memory[program_counter] + memory[inr(program_counter)]
-          )}).`,
+          } in memory location ${
+            memory[inr(program_counter)] + memory[program_counter]
+          }).`,
         });
         program_counter = inr(inr(program_counter));
       } else if (code_text_array[0] == "STA") {
@@ -635,19 +651,26 @@ export default function Home() {
         if (code_text_array[1] != "M") {
           let to_sub = registers_temp[code_text_array[1]];
           if (dec(to_sub.slice(1)) > dec(registers_temp.A.slice(1))) {
-            flags_temp.AC = 1;
-          } else {
             flags_temp.AC = 0;
+          } else {
+            flags_temp.AC = 1;
           }
+
           let acc_temp = registers_temp.A;
-          registers_temp.A = hex(Math.abs(dec(registers_temp.A) - dec(to_sub)))
+          registers_temp.A = hex(dec(registers_temp.A) - dec(to_sub))
             .padStart(2, "0")
             .toUpperCase();
-
-          if (dec(to_sub) > dec(acc_temp)) {
-            registers_temp.A = "1" + registers_temp.A.toString();
+          console.log(parseInt("0x" + registers_temp.A.slice(1), 16));
+          if (dec(to_sub) > dec(registers_temp.A)) {
+            flags_temp.S = 1;
+            registers_temp.A =
+              "1" +
+              hex(
+                256 - parseInt("0x" + registers_temp.A.slice(1), 16)
+              ).toString();
+          } else {
+            flags_temp.S = 0;
           }
-
           logs_temp.push({
             type: "success",
             code: code_text_array.join(" "),
@@ -656,9 +679,14 @@ export default function Home() {
         } else {
           let to_sub = memory[registers_temp.H + registers_temp.L];
           if (dec(to_sub.slice(1)) > dec(registers_temp.A.slice(1))) {
-            flags_temp.AC = 1;
-          } else {
             flags_temp.AC = 0;
+          } else {
+            flags_temp.AC = 1;
+          }
+          if (dec(to_sub) > dec(registers_temp.A)) {
+            flags_temp.S = 1;
+          } else {
+            flags_temp.S = 0;
           }
           let acc_temp = registers_temp.A;
           registers_temp.A = hex(Math.abs(dec(registers_temp.A) - dec(to_sub)))
@@ -1354,6 +1382,7 @@ export default function Home() {
         "ADD",
         "ADI",
         "ADC",
+        "ACI",
         "SUB",
         "SUI",
         "SBB",

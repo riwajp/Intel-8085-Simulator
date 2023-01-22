@@ -226,22 +226,29 @@ const checkSyntax = (code, labels, iteration_number) => {
 
 const flagsStatus = (flags, acc) => {
   let binary_eqv = parseInt(acc, 16).toString(2).padStart(8, "0");
-  let acc_temp = acc;
+  console.log(acc);
   if (acc.length == 3) {
     flags.C = 1;
     acc = acc.slice(1);
+    binary_eqv = parseInt(acc, 16).toString(2).padStart(8, "0");
+  } else {
+    flags.C = 0;
   }
   if (dec(acc) == 0) {
     flags.Z = 1;
   } else {
     flags.Z = 0;
   }
+
+  /*
   if (binary_eqv.charAt(0) == "0" && flags.S == 0) {
     flags.S = 0;
   } else {
     flags.S = 1;
+    
   }
-
+*/
+  //always check parity at last cause removing carry and sign bits obtained due to add and subtract operations affect parity
   if (
     binary_eqv.split("").filter((e) => e == "1").length % 2 == 0 &&
     binary_eqv.split("").filter((e) => e == "1").length != 0
