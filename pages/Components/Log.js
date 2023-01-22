@@ -9,6 +9,7 @@ const Log = ({
   setFlags,
   flags_states,
 }) => {
+  console.log(logs);
   const [active_index, setActiveIndex] = useState();
   useEffect(() => {
     setActiveIndex(logs.length - 1);

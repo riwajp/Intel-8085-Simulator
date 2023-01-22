@@ -44,6 +44,7 @@ export default function Home() {
   const [speed, setSpeed] = useState(500);
 
   const memory_ref = useRef(memory);
+  const code_div_ref = useRef();
   //load the program into the memory============================================================
 
   /*
@@ -78,66 +79,77 @@ export default function Home() {
     setRegisters(initial_registers);
     setMemory({});
     let code_lines_separated = code.split("\n").map((e) => e.trim());
+    console.log(code_lines_separated);
 
-    var address = current_address;
     let memory_temp = { ...memory };
 
-    for (let i in code_lines_separated) {
-      if (code_lines_separated[i] == "") {
-        continue;
-      }
-      lines_map[address] = i;
-      var line = code_lines_separated[i];
-      if (line.includes(":")) {
-        labels[line.split(":")[0]] = address;
+    var iteration_number = 1;
+    var missed_halt = 1;
+    while (iteration_number <= 2) {
+      var address = current_address;
 
-        line = line.split(":")[1];
-      }
-      line = checkSyntax(line, labels);
+      for (let i in code_lines_separated) {
+        if (code_lines_separated[i] == "") {
+          continue;
+        }
+        lines_map[address] = i;
+        var line = code_lines_separated[i];
+        if (line.includes(":")) {
+          labels[line.split(":")[0]] = address;
 
-      if (!Array.isArray(line)) {
-        return { memory: `Error on line ${parseInt(i) + 1}: ${line}` };
-      }
-      let hex_code = hexCode(line);
+          line = line.split(":")[1];
+        }
 
-      memory_temp[address] = hex_code.opCode;
+        line = checkSyntax(line, labels, iteration_number);
 
-      address = inr(address);
-      if (hex_code.opCode == "EF") {
-        setCompilationMemory(memory_temp);
+        if (!Array.isArray(line)) {
+          return { memory: `Error on line ${parseInt(i) + 1}: ${line}` };
+        }
 
-        return { memory: memory_temp, labels: labels, lines_map };
-      }
+        let hex_code = hexCode(line);
 
-      if (hex_code.data != "") {
-        if (
-          ["C3", "C2", "CA", "D2", "DA", "E2", "EA", "F2", "FA"].includes(
-            hex_code.opCode
-          )
-        ) {
-          memory_temp[address] = labels[hex_code.data].slice(2);
-          memory_temp[inr(address)] = labels[hex_code.data].slice(0, 2);
+        memory_temp[address] = hex_code.opCode;
 
-          address = inr(inr(address));
-        } else {
-          memory_temp[address] = hex_code.data.substring(0, 2);
-          if (hex_code.data.length == 4) {
-            memory_temp[address] = hex_code.data.substring(2, 5);
-            address = inr(address);
+        address = inr(address);
+        if (hex_code.opCode == "EF") {
+          setCompilationMemory(memory_temp);
+
+          missed_halt = 0;
+        }
+
+        if (hex_code.data != "") {
+          if (
+            ["C3", "C2", "CA", "D2", "DA", "E2", "EA", "F2", "FA"].includes(
+              hex_code.opCode
+            )
+          ) {
+            memory_temp[address] = labels[hex_code.data]?.slice(2) || "00";
+            memory_temp[inr(address)] =
+              labels[hex_code.data]?.slice(0, 2) || "00";
+
+            address = inr(inr(address));
+          } else {
             memory_temp[address] = hex_code.data.substring(0, 2);
+            if (hex_code.data.length == 4) {
+              memory_temp[address] = hex_code.data.substring(2, 5);
+              address = inr(address);
+              memory_temp[address] = hex_code.data.substring(0, 2);
+            }
+            address = inr(address);
           }
-          address = inr(address);
         }
       }
+      iteration_number++;
     }
     setMemory(memory_temp);
-
+    if (!missed_halt) {
+      return { memory: memory_temp, labels: labels, lines_map };
+    }
     return { memory: `You missed HLT!` };
   };
 
   //Execute the code ============================================================
   const execute = async (code) => {
-    console.log(String(code).split("\n"));
     let code_details = load(code.toUpperCase().trim());
     let memory = code_details.memory;
     let lines_map = code_details.lines_map;
@@ -314,11 +326,11 @@ export default function Home() {
         program_counter = inr(inr(program_counter));
       } else if (code_text_array[0] == "LDAX") {
         program_counter = inr(program_counter);
-        let data = memory[registers_temp["B"] + registers_temp["C"]]
-          ? memory[registers_temp["B"] + registers_temp["C"]]
-          : "00";
 
         if (code_text_array[1] == "B") {
+          let data = memory[registers_temp["B"] + registers_temp["C"]]
+            ? memory[registers_temp["B"] + registers_temp["C"]]
+            : "00";
           registers_temp = {
             ...registers_temp,
             A: data,
@@ -346,6 +358,24 @@ export default function Home() {
             code: code_text_array.join(" "),
             message: `Loaded the data stored in memory location pointed by register DE(${
               registers_temp["D"] + registers_temp["E"]
+            }) i.e. ${data} into register 
+            A`,
+          });
+        }
+
+        if (code_text_array[1] == "H") {
+          let data = memory[registers_temp["H"] + registers_temp["L"]]
+            ? memory[registers_temp["H"] + registers_temp["L"]]
+            : "00";
+          registers_temp = {
+            ...registers_temp,
+            A: data,
+          };
+          logs_temp.push({
+            type: "success",
+            code: code_text_array.join(" "),
+            message: `Loaded the data stored in memory location pointed by register HL(${
+              registers_temp["H"] + registers_temp["L"]
             }) i.e. ${data} into register 
             A`,
           });
@@ -760,11 +790,12 @@ export default function Home() {
           code: code_text_array.join(" "),
           message: `Subtracted the given data ${to_sub} and carry i.e. ${flags_temp.C}from Accmulator.`,
         });
+        program_counter = inr(program_counter);
       } else if (code_text_array[0] == "INR") {
         program_counter = inr(program_counter);
         if (code_text_array[1] !== "M") {
-          registers_temp[code_text_array[1]] = inr(
-            registers_temp[code_text_array[1]]
+          registers_temp[code_text_array[1]] = hex(
+            inr(registers_temp[code_text_array[1]])
           );
           logs_temp.push({
             type: "success",
@@ -773,11 +804,21 @@ export default function Home() {
               code_text_array[1]
             }  by 1 i.e. now it is ${registers_temp[code_text_array[1]]}.`,
           });
+          let ac_flag = flagsStatus(
+            flags_temp,
+            registers_temp[code_text_array[1]]
+          );
+          flags_temp = ac_flag.flags;
+          flags_temp.AC =
+            dec(inr(registers_temp[code_text_array[1]].slice(1))) > 15;
+          registers_temp[code_text_array[1]] = ac_flag.acc;
         } else {
-          memory[registers_temp.H + registers_temp.L] = inr(
-            memory[registers_temp.H + registers_temp.L]
-              ? memory[registers_temp.H + registers_temp.L]
-              : "00"
+          memory[registers_temp.H + registers_temp.L] = hex(
+            inr(
+              memory[registers_temp.H + registers_temp.L]
+                ? memory[registers_temp.H + registers_temp.L]
+                : "00"
+            )
           );
           logs_temp.push({
             type: "success",
@@ -790,23 +831,27 @@ export default function Home() {
           });
           let ac_flag = flagsStatus(
             flags_temp,
-            registers_temp[code_text_array[1]]
+            memory[registers_temp.H + registers_temp.L]
           );
           flags_temp = ac_flag.flags;
-          registers_temp[code_text_array[1]] = ac_flag.acc;
+          flags_temp.AC =
+            dec(inr(memory[registers_temp.H + registers_temp.L].slice(1))) > 15;
+
+          memory[registers_temp.H + registers_temp.L] = ac_flag.acc;
         }
       } else if (code_text_array[0] == "DCR") {
         program_counter = inr(program_counter);
         if (code_text_array[1] !== "M") {
           if (registers_temp[code_text_array[1]].slice(1) < 1) {
-            flags_temp.AC = "1";
-          } else {
             flags_temp.AC = "0";
+          } else {
+            flags_temp.AC = "1";
           }
-          registers_temp[code_text_array[1]] =
+          registers_temp[code_text_array[1]] = hex(
             dcr(registers_temp[code_text_array[1]]) < 0
               ? "FF"
-              : dcr(registers_temp[code_text_array[1]]);
+              : dcr(registers_temp[code_text_array[1]])
+          );
 
           logs_temp.push({
             type: "success",
@@ -815,16 +860,24 @@ export default function Home() {
               code_text_array[1]
             }  by 1 i.e. now it is i.e. ${registers_temp[code_text_array[1]]}`,
           });
+          let ac_flag = flagsStatus(
+            flags_temp,
+            registers_temp[code_text_array[1]]
+          );
+          flags_temp = ac_flag.flags;
+          registers_temp[code_text_array[1]] = ac_flag.acc;
         } else {
           if (memory[registers_temp.H + registers_temp.L].slice(1) < 1) {
-            flags_temp.AC = "1";
-          } else {
             flags_temp.AC = "0";
+          } else {
+            flags_temp.AC = "1";
           }
-          memory[registers_temp.H + registers_temp.L] = dcr(
-            memory[registers_temp.H + registers_temp.L]
-              ? memory[registers_temp.H + registers_temp.L]
-              : "00"
+          memory[registers_temp.H + registers_temp.L] = hex(
+            dcr(
+              memory[registers_temp.H + registers_temp.L]
+                ? memory[registers_temp.H + registers_temp.L]
+                : "00"
+            )
           );
           logs_temp.push({
             type: "success",
@@ -835,13 +888,14 @@ export default function Home() {
               memory[registers_temp.H + registers_temp.L]
             }`,
           });
+
+          let ac_flag = flagsStatus(
+            flags_temp,
+            memory[registers_temp.H + registers_temp.L]
+          );
+          flags_temp = ac_flag.flags;
+          memory[registers_temp.H + registers_temp.L] = ac_flag.acc;
         }
-        let ac_flag = flagsStatus(
-          flags_temp,
-          registers_temp[code_text_array[1]]
-        );
-        flags_temp = ac_flag.flags;
-        registers_temp[code_text_array[1]] = ac_flag.acc;
       } else if (code_text_array[0] == "INX") {
         program_counter = inr(program_counter);
         if (code_text_array[1] == "B") {
@@ -1037,7 +1091,7 @@ export default function Home() {
             .toUpperCase();
 
           if (dec(to_sub) > dec(registers_temp.A)) {
-            difference = "1" + difference.toString();
+            difference = dec("1" + difference.toString(2));
           }
 
           logs_temp.push({
@@ -1144,21 +1198,13 @@ export default function Home() {
       } else if (code_text_array[0] == "JMP") {
         program_counter = inr(program_counter);
         program_counter =
-          memory[inr(program_counter)] + memory[inr(program_counter)];
+          memory[inr(program_counter)] + memory[program_counter];
         logs_temp.push({
           type: "success",
           code: code_text_array.join(" "),
           message: `Jumped to ${program_counter}`,
         });
-      } else if (code_text_array[0] == "JMP") {
-        program_counter = inr(program_counter);
-        program_counter =
-          memory[inr(program_counter)] + memory[inr(program_counter)];
-        logs_temp.push({
-          type: "success",
-          code: code_text_array.join(" "),
-          message: `Jumped to ${program_counter}`,
-        });
+        //program_counter = inr(program_counter);
       } else if (code_text_array[0] == "JC") {
         program_counter = inr(program_counter);
         if (flags_temp.C == "1") {
@@ -1304,7 +1350,6 @@ export default function Home() {
           });
         }
       }
-      console.log("Executing");
       let flag_affect_acc = [
         "ADD",
         "ADI",
@@ -1316,6 +1361,7 @@ export default function Home() {
         "DAD",
         "ORA",
         "XRA",
+
         "CMA",
         "ANI",
         "ORI",
@@ -1364,6 +1410,7 @@ export default function Home() {
           setCurrentAddress={setCurrentAddress}
           speed={speed}
           setSpeed={setSpeed}
+          code_div_ref={code_div_ref}
         />
         <Memory
           memory={memory}

@@ -60,7 +60,7 @@ const hexCode = (code) => {
   return opCodes.length ? opCodes[opCodes.length - 1] : 0;
 };
 
-const checkSyntax = (code, labels) => {
+const checkSyntax = (code, labels, iteration_number) => {
   const verify = (code, labels) => {
     let code_array = code.replace(/\s+/g, " ").trim().split(" ");
 
@@ -204,7 +204,10 @@ const checkSyntax = (code, labels) => {
       )
     ) {
       if (code_array.length == 2) {
-        if (Object.keys(labels).includes(code_array[1])) {
+        if (
+          iteration_number == 1 ||
+          Object.keys(labels).includes(code_array[1])
+        ) {
           return code_array;
         } else {
           error_message = "Given label not defined.";
@@ -233,7 +236,7 @@ const flagsStatus = (flags, acc) => {
   } else {
     flags.Z = 0;
   }
-  if (acc_temp.charAt(0) == "0" && flags.S == 0) {
+  if (binary_eqv.charAt(0) == "0" && flags.S == 0) {
     flags.S = 0;
   } else {
     flags.S = 1;
@@ -248,7 +251,7 @@ const flagsStatus = (flags, acc) => {
     flags.P = 0;
   }
 
-  return { flags, acc };
+  return { flags, acc: hex(acc) };
 };
 
 const format = (obj) => {
