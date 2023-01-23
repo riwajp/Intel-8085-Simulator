@@ -660,7 +660,6 @@ export default function Home() {
           registers_temp.A = hex(dec(registers_temp.A) - dec(to_sub))
             .padStart(2, "0")
             .toUpperCase();
-          console.log(parseInt("0x" + registers_temp.A.slice(1), 16));
           if (dec(to_sub) > dec(registers_temp.A)) {
             flags_temp.S = 1;
             registers_temp.A =
@@ -711,17 +710,26 @@ export default function Home() {
         let to_sub = memory[program_counter];
 
         if (dec(to_sub.slice(1)) > dec(registers_temp.A.slice(1))) {
-          flags_temp.AC = 1;
-        } else {
           flags_temp.AC = 0;
+        } else {
+          flags_temp.AC = 1;
         }
+
         let acc_temp = registers_temp.A;
-        registers_temp.A = hex(Math.abs(dec(registers_temp.A) - dec(to_sub)))
+        registers_temp.A = hex(dec(registers_temp.A) - dec(to_sub))
           .padStart(2, "0")
           .toUpperCase();
-
         if (dec(to_sub) > dec(acc_temp)) {
-          registers_temp.A = "1" + registers_temp.A.toString();
+          console.log("1 sign");
+          flags_temp.S = 1;
+          registers_temp.A =
+            "1" +
+            hex(
+              256 - parseInt("0x" + registers_temp.A.slice(1), 16)
+            ).toString();
+        } else {
+          console.log("0 sign");
+          flags_temp.S = 0;
         }
 
         logs_temp.push({
@@ -734,24 +742,30 @@ export default function Home() {
         program_counter = inr(program_counter);
         if (code_text_array[1] != "M") {
           let to_sub = registers_temp[code_text_array[1]];
-          let carry = flags.C;
           if (
             dec(to_sub.slice(1)) >
             dec(registers_temp.A.slice(1)) - dec(flags_temp.C)
           ) {
-            flags_temp.AC = 1;
-          } else {
             flags_temp.AC = 0;
+          } else {
+            flags_temp.AC = 1;
           }
+
           let acc_temp = registers_temp.A;
           registers_temp.A = hex(
-            Math.abs(dec(registers_temp.A) - dec(to_sub) - dec(flags_temp.C))
+            dec(registers_temp.A) - dec(to_sub) - dec(flags_temp.C)
           )
             .padStart(2, "0")
             .toUpperCase();
-
-          if (dec(to_sub) > dec(acc_temp) - dec(flags_temp.C)) {
-            registers_temp.A = "1" + registers_temp.A.toString();
+          if (dec(to_sub) > dec(registers_temp.A)) {
+            flags_temp.S = 1;
+            registers_temp.A =
+              "1" +
+              hex(
+                256 - parseInt("0x" + registers_temp.A.slice(1), 16)
+              ).toString();
+          } else {
+            flags_temp.S = 0;
           }
 
           logs_temp.push({
@@ -761,26 +775,28 @@ export default function Home() {
           });
         } else {
           let to_sub = memory[registers_temp.H + registers_temp.L];
-          let carry = flags.C;
-          if (
-            dec(to_sub.slice(1)) >
-            dec(registers_temp.A.slice(1)) - dec(flags_temp.C)
-          ) {
-            flags_temp.AC = 1;
-          } else {
+          if (dec(to_sub.slice(1)) > dec(registers_temp.A.slice(1))) {
             flags_temp.AC = 0;
+          } else {
+            flags_temp.AC = 1;
           }
+
           let acc_temp = registers_temp.A;
           registers_temp.A = hex(
-            Math.abs(dec(registers_temp.A) - dec(to_sub) - dec(flags_temp.C))
+            dec(registers_temp.A) - dec(to_sub) - dec(flags_temp.C)
           )
             .padStart(2, "0")
             .toUpperCase();
-
-          if (dec(to_sub) > dec(acc_temp) - dec(flags_temp.C)) {
-            registers_temp.A = "1" + registers_temp.A.toString();
+          if (dec(to_sub) > dec(registers_temp.A)) {
+            flags_temp.S = 1;
+            registers_temp.A =
+              "1" +
+              hex(
+                256 - parseInt("0x" + registers_temp.A.slice(1), 16)
+              ).toString();
+          } else {
+            flags_temp.S = 0;
           }
-
           logs_temp.push({
             type: "success",
             code: code_text_array.join(" "),
@@ -793,24 +809,30 @@ export default function Home() {
         program_counter = inr(program_counter);
 
         let to_sub = memory[program_counter];
-        let carry = flags.C;
         if (
           dec(to_sub.slice(1)) >
           dec(registers_temp.A.slice(1)) - dec(flags_temp.C)
         ) {
-          flags_temp.AC = 1;
-        } else {
           flags_temp.AC = 0;
+        } else {
+          flags_temp.AC = 1;
         }
+
         let acc_temp = registers_temp.A;
         registers_temp.A = hex(
-          Math.abs(dec(registers_temp.A) - dec(to_sub) - dec(flags_temp.C))
+          dec(registers_temp.A) - dec(to_sub) - dec(flags_temp.C)
         )
           .padStart(2, "0")
           .toUpperCase();
-
-        if (dec(to_sub) > dec(acc_temp) - dec(flags_temp.C)) {
-          registers_temp.A = "1" + registers_temp.A.toString();
+        if (dec(to_sub) > dec(registers_temp.A)) {
+          flags_temp.S = 1;
+          registers_temp.A =
+            "1" +
+            hex(
+              256 - parseInt("0x" + registers_temp.A.slice(1), 16)
+            ).toString();
+        } else {
+          flags_temp.S = 0;
         }
 
         logs_temp.push({
@@ -1386,6 +1408,7 @@ export default function Home() {
         "SUB",
         "SUI",
         "SBB",
+        "SBI",
         "ANA",
         "DAD",
         "ORA",
