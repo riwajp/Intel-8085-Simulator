@@ -240,14 +240,12 @@ const flagsStatus = (flags, acc) => {
     flags.Z = 0;
   }
 
-  /*
-  if (binary_eqv.charAt(0) == "0" && flags.S == 0) {
+  if (binary_eqv.charAt(0) == "0") {
     flags.S = 0;
   } else {
     flags.S = 1;
-    
   }
-*/
+
   //always check parity at last cause removing carry and sign bits obtained due to add and subtract operations affect parity
   if (
     binary_eqv.split("").filter((e) => e == "1").length % 2 == 0 &&

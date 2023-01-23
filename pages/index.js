@@ -41,7 +41,7 @@ export default function Home() {
   const [compilation_memory, setCompilationMemory] = useState({});
   const [flags, setFlags] = useState({ C: 0, AC: 0, P: 0, Z: 0, S: 0 });
   const [flags_states, setFlagsStates] = useState([]);
-  const [speed, setSpeed] = useState(500);
+  const [speed, setSpeed] = useState(1);
 
   const memory_ref = useRef(memory);
   const code_div_ref = useRef();
@@ -666,7 +666,7 @@ export default function Home() {
               "1" +
               hex(
                 256 - parseInt("0x" + registers_temp.A.slice(1), 16)
-              ).toString();
+              ).padStart(2, "0");
           } else {
             flags_temp.S = 0;
           }
@@ -682,20 +682,21 @@ export default function Home() {
           } else {
             flags_temp.AC = 1;
           }
+
+          let acc_temp = registers_temp.A;
+          registers_temp.A = hex(dec(registers_temp.A) - dec(to_sub))
+            .padStart(2, "0")
+            .toUpperCase();
           if (dec(to_sub) > dec(registers_temp.A)) {
             flags_temp.S = 1;
+            registers_temp.A =
+              "1" +
+              hex(
+                256 - parseInt("0x" + registers_temp.A.slice(1), 16)
+              ).padStart(2, "0");
           } else {
             flags_temp.S = 0;
           }
-          let acc_temp = registers_temp.A;
-          registers_temp.A = hex(Math.abs(dec(registers_temp.A) - dec(to_sub)))
-            .padStart(2, "0")
-            .toUpperCase();
-
-          if (dec(to_sub) > dec(acc_temp)) {
-            registers_temp.A = "1" + registers_temp.A.toString();
-          }
-
           logs_temp.push({
             type: "success",
             code: code_text_array.join(" "),
@@ -724,9 +725,10 @@ export default function Home() {
           flags_temp.S = 1;
           registers_temp.A =
             "1" +
-            hex(
-              256 - parseInt("0x" + registers_temp.A.slice(1), 16)
-            ).toString();
+            hex(256 - parseInt("0x" + registers_temp.A.slice(1), 16)).padStart(
+              2,
+              "0"
+            );
         } else {
           console.log("0 sign");
           flags_temp.S = 0;
@@ -763,7 +765,7 @@ export default function Home() {
               "1" +
               hex(
                 256 - parseInt("0x" + registers_temp.A.slice(1), 16)
-              ).toString();
+              ).padStart(2, "0");
           } else {
             flags_temp.S = 0;
           }
@@ -775,7 +777,10 @@ export default function Home() {
           });
         } else {
           let to_sub = memory[registers_temp.H + registers_temp.L];
-          if (dec(to_sub.slice(1)) > dec(registers_temp.A.slice(1))) {
+          if (
+            dec(to_sub.slice(1)) >
+            dec(registers_temp.A.slice(1)) - dec(flags_temp.C)
+          ) {
             flags_temp.AC = 0;
           } else {
             flags_temp.AC = 1;
@@ -793,10 +798,11 @@ export default function Home() {
               "1" +
               hex(
                 256 - parseInt("0x" + registers_temp.A.slice(1), 16)
-              ).toString();
+              ).padStart(2, "0");
           } else {
             flags_temp.S = 0;
           }
+
           logs_temp.push({
             type: "success",
             code: code_text_array.join(" "),
@@ -828,9 +834,10 @@ export default function Home() {
           flags_temp.S = 1;
           registers_temp.A =
             "1" +
-            hex(
-              256 - parseInt("0x" + registers_temp.A.slice(1), 16)
-            ).toString();
+            hex(256 - parseInt("0x" + registers_temp.A.slice(1), 16)).padStart(
+              2,
+              "0"
+            );
         } else {
           flags_temp.S = 0;
         }
