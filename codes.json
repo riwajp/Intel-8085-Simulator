@@ -6,6 +6,10 @@
   "label": "DI",
   "opCode": "F3"
 },
+{
+  "label": "CM Label",
+  "opCode": "FC"
+},
     {
       "label": "ACI Data",
       "opCode": "CE"
@@ -122,10 +126,7 @@
       "label": "CC Label",
       "opCode": "DC"
     },
-    {
-      "label": "CM Label",
-      "opCode": "FC"
-    },
+    
     {
       "label": "CMA",
       "opCode": "2F"
@@ -213,6 +214,9 @@
     {
       "label": "DAD SP",
       "opCode": "39"
+    },    {
+      "label": "RM",
+      "opCode": "F8"
     },
     {
       "label": "DCR A",
@@ -271,6 +275,7 @@
       "label": "HLT",
       "opCode": "EF"
     },
+
     {
       "label": "IN Port-address",
       "opCode": "DB"
@@ -776,10 +781,7 @@
       "label": "RLC",
       "opCode": "07"
     },
-    {
-      "label": "RM",
-      "opCode": "F8"
-    },
+    
     {
       "label": "RNC",
       "opCode": "D0"

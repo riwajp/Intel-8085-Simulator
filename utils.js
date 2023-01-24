@@ -23,13 +23,16 @@ const inr = (hx) => {
     .padStart(hx.length, "0")
     .toUpperCase();
 };
-const dcr = (hx) => {
-  if (hx.toString().toUpperCase() == "0000") {
-    return 0xffff;
-  }
-  if (hx.toString().toUpperCase() == "00") {
+const dcr = (hx, address = 0) => {
+  console.log(hx);
+  if (hx.toString().toUpperCase() == "0") {
+    if (address) {
+      return 0xffff;
+    }
+
     return 0xff;
   }
+
   return hex(dec(hx) - 1)
     .padStart(hx.length, "0")
     .toUpperCase();
@@ -225,8 +228,8 @@ const checkSyntax = (code, labels, iteration_number) => {
 };
 
 const flagsStatus = (flags, acc) => {
-  let binary_eqv = parseInt(acc, 16).toString(2).padStart(8, "0");
   console.log(acc);
+  let binary_eqv = parseInt(acc, 16).toString(2).padStart(8, "0");
   if (acc.length == 3) {
     flags.C = 1;
     acc = acc.slice(1);
