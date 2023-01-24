@@ -1,0 +1,12 @@
+[
+    {
+        "code":"mvi a 99\nsub a\nhlt",
+        "flags":{"C":0,"AC":1,"S":0,"Z":1,"P":0},
+        "registers":{"A":"00","B":"00","C":"00","D":"00","E":"00","H":"00","L":"00"}
+    },
+    {
+        "code":"mvi a ff\ninr a\ninx h\nani 89\ncpi 89\ncma\nhlt",
+        "flags":{"C":1,"AC":0,"S":0,"Z":0,"P":1},
+        "registers":{"A":"FF","B":"00","C":"00","D":"00","E":"00","H":"00","L":"01"}
+    }
+]

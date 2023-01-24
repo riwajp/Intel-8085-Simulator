@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState } from "react";
 import codes_json from "../codes";
+import Test from "./Components/Test";
 
 import Memory from "./Components/Memory";
 import Registers from "./Components/Registers";
@@ -26,7 +27,6 @@ export default function Home() {
     E: "00",
     H: "00",
     L: "00",
-    M: "00",
   };
   let initial_memory = {};
   const [registers, setRegisters] = useState(initial_registers);
@@ -669,7 +669,7 @@ export default function Home() {
           registers_temp.A = hex(dec(registers_temp.A) - dec(to_sub))
             .padStart(2, "0")
             .toUpperCase();
-          if (dec(to_sub) > dec(registers_temp.A)) {
+          if (dec(to_sub) > dec(acc_temp)) {
             flags_temp.S = 1;
             registers_temp.A =
               "1" +
@@ -768,7 +768,7 @@ export default function Home() {
           )
             .padStart(2, "0")
             .toUpperCase();
-          if (dec(to_sub) > dec(registers_temp.A)) {
+          if (dec(to_sub) > dec(acc_temp)) {
             flags_temp.S = 1;
             registers_temp.A =
               "1" +
@@ -943,7 +943,7 @@ export default function Home() {
           registers_temp.A = hex(dec(registers_temp.A) - dec(to_sub))
             .padStart(2, "0")
             .toUpperCase();
-          if (dec(to_sub) > dec(registers_temp.A)) {
+          if (dec(to_sub) > dec(acc_temp)) {
             flags_temp.S = 1;
             registers_temp.A =
               "1" +
@@ -1204,18 +1204,21 @@ export default function Home() {
             flags_temp.AC = 1;
           }
 
-          difference = hex(Math.abs(dec(registers_temp.A) - dec(to_sub)))
+          difference = hex(dec(registers_temp.A) - dec(to_sub))
             .padStart(2, "0")
             .toUpperCase();
 
           if (dec(to_sub) > dec(registers_temp.A)) {
-            difference = "1" + hex(difference).padStart(2, "0");
+            difference =
+              "1" +
+              hex(256 - parseInt("0x" + difference.slice(1), 16)).padStart(
+                2,
+                "0"
+              );
           }
           let ac_flag = flagsStatus(flags_temp, difference);
           flags_temp = ac_flag.flags;
-          if (dec(to_sub) > dec(registers_temp.A)) {
-            flags_temp.S = 1;
-          }
+
           logs_temp.push({
             type: "success",
             code: code_text_array.join(" "),
@@ -1231,18 +1234,21 @@ export default function Home() {
             flags_temp.AC = 1;
           }
 
-          difference = hex(Math.abs(dec(registers_temp.A) - dec(to_sub)))
+          difference = hex(dec(registers_temp.A) - dec(to_sub))
             .padStart(2, "0")
             .toUpperCase();
 
           if (dec(to_sub) > dec(registers_temp.A)) {
-            difference = "1" + hex(difference).padStart(2, "0");
+            difference =
+              "1" +
+              hex(256 - parseInt("0x" + difference.slice(1), 16)).padStart(
+                2,
+                "0"
+              );
           }
           let ac_flag = flagsStatus(flags_temp, difference);
           flags_temp = ac_flag.flags;
-          if (dec(to_sub) > dec(registers_temp.A)) {
-            flags_temp.S = 1;
-          }
+
           logs_temp.push({
             type: "success",
             code: code_text_array.join(" "),
@@ -1259,20 +1265,26 @@ export default function Home() {
           flags_temp.AC = 1;
         }
 
-        difference = hex(Math.abs(dec(registers_temp.A) - dec(to_sub)))
+        difference = hex(dec(registers_temp.A) - dec(to_sub))
           .padStart(2, "0")
           .toUpperCase();
 
         if (dec(to_sub) > dec(registers_temp.A)) {
-          flags_temp.S = 1;
-          difference = "1" + hex(difference).padStart(2, "0");
+          difference =
+            "1" +
+            hex(256 - parseInt("0x" + difference.slice(1), 16)).padStart(
+              2,
+              "0"
+            );
         }
 
         let ac_flag = flagsStatus(flags_temp, difference);
         flags_temp = ac_flag.flags;
+        /*
         if (dec(to_sub) > dec(registers_temp.A)) {
           flags_temp.S = 1;
         }
+        */
         program_counter = inr(program_counter);
         logs_temp.push({
           type: "success",
@@ -1524,10 +1536,11 @@ export default function Home() {
       register_states_temp.push(JSON.parse(JSON.stringify(registers_temp)));
       flags_states_temp.push(JSON.parse(JSON.stringify(flags_temp)));
 
+      /*
       registers_temp["M"] = memory[registers_temp.H + registers_temp.L]
         ? memory[registers_temp.H + registers_temp.L]
         : "00";
-
+*/
       memory = format(memory);
       setMemory(memory);
       logs_temp[logs_temp.length - 1] = {
@@ -1581,6 +1594,7 @@ export default function Home() {
         />
         <Flag flags={flags} />
       </div>
+      <Test execute={execute} registers={registers} flags={flags} />
     </div>
   );
 }
