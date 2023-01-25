@@ -933,22 +933,31 @@ export default function Home() {
         program_counter = inr(program_counter);
         if (code_text_array[1] !== "M") {
           let to_sub = "01";
-          if (dec(to_sub.slice(1)) > dec(registers_temp.A.slice(1))) {
+          if (
+            dec(to_sub.slice(1)) >
+            dec(registers_temp[code_text_array[1]].slice(1))
+          ) {
             flags_temp.AC = 0;
           } else {
             flags_temp.AC = 1;
           }
 
-          let acc_temp = registers_temp.A;
-          registers_temp.A = hex(dec(registers_temp.A) - dec(to_sub))
+          let acc_temp = registers_temp[code_text_array[1]];
+          registers_temp[code_text_array[1]] = hex(
+            dec(registers_temp[code_text_array[1]]) - dec(to_sub)
+          )
             .padStart(2, "0")
             .toUpperCase();
           if (dec(to_sub) > dec(acc_temp)) {
             flags_temp.S = 1;
-            registers_temp.A =
+            registers_temp[code_text_array[1]] =
               "1" +
               hex(
-                256 - parseInt("0x" + registers_temp.A.slice(1), 16)
+                256 -
+                  parseInt(
+                    "0x" + registers_temp[code_text_array[1]].slice(1),
+                    16
+                  )
               ).padStart(2, "0");
           } else {
             flags_temp.S = 0;
@@ -1516,7 +1525,7 @@ export default function Home() {
 
       if (flag_affect_acc.includes(code_text_array[0])) {
         if (
-          ["INR", "DCR"].includes(code_text_array[1]) &&
+          ["INR", "DCR"].includes(code_text_array[0]) &&
           code_text_array[1] == "M"
         ) {
           let ac_flag = flagsStatus(
@@ -1525,6 +1534,13 @@ export default function Home() {
           );
           flags_temp = ac_flag.flags;
           memory[registers_temp["H"] + registers_temp["L"]] = ac_flag.acc;
+        } else if (["INR", "DCR"].includes(code_text_array[0])) {
+          let ac_flag = flagsStatus(
+            flags_temp,
+            registers_temp[code_text_array[1]]
+          );
+          flags_temp = ac_flag.flags;
+          registers_temp[code_text_array[1]] = ac_flag.acc;
         } else {
           let ac_flag = flagsStatus(flags_temp, registers_temp.A);
           flags_temp = ac_flag.flags;
@@ -1559,6 +1575,7 @@ export default function Home() {
       setFlagsStates(flags_states_temp);
       await timer(speed);
     }
+    return { registers: registers_temp, flags: flags_temp };
   };
 
   return (
@@ -1593,8 +1610,8 @@ export default function Home() {
           setFlags={setFlags}
         />
         <Flag flags={flags} />
+        <Test execute={execute} />
       </div>
-      <Test execute={execute} registers={registers} flags={flags} />
     </div>
   );
 }

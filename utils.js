@@ -24,7 +24,6 @@ const inr = (hx) => {
     .toUpperCase();
 };
 const dcr = (hx, address = 0) => {
-  console.log(hx);
   if (hx.toString().toUpperCase() == "0") {
     if (address) {
       return 0xffff;
@@ -228,7 +227,6 @@ const checkSyntax = (code, labels, iteration_number) => {
 };
 
 const flagsStatus = (flags, acc) => {
-  console.log(acc);
   let binary_eqv = parseInt(acc, 16).toString(2).padStart(8, "0");
   if (acc.length == 3) {
     flags.C = 1;

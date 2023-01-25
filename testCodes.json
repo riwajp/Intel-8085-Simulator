@@ -8,5 +8,21 @@
         "code":"mvi a ff\ninr a\ninx h\nani 89\ncpi 89\ncma\nhlt",
         "flags":{"C":1,"AC":0,"S":0,"Z":0,"P":1},
         "registers":{"A":"FF","B":"00","C":"00","D":"00","E":"00","H":"00","L":"01"}
+    },
+    {
+        "code":"mvi b 0A\nlxi h 9500\nlxi d 9600\nloop:mov a m\nstax d\ninx h \ninx d\ndcr b \njnz loop\nhlt",
+        "flags":{"C":0,"AC":1,"S":0,"Z":1,"P":0},
+        "registers":{"A":"00","B":"00","C":"00","D":"96","E":"0A","H":"95","L":"0A"}
+    },
+    {
+        "code":"mvi c 00\nlxi h 3000\nmov a m\ninx h\nmov b m\nadd b\njnc skip\ninr c\nskip:inx h\nmov m a\ninx h\nmov m c\nhlt",
+        "flags":{"C":0,"AC":0,"S":0,"Z":1,"P":0},
+        "registers":{"A":"00","B":"00","C":"00","D":"00","E":"00","H":"30","L":"03"}
+    },
+    {
+        "code":"mvi c 00\nlhld 4000\nxchg\nlhld 4002\nmov a e\nadd l\nmov l a\nmov a d\nadc h\njnc loop\ninr c\nloop:mov h a\nshld 4004\nmov a c\nsta 4006\nhlt",
+        "flags":{"C":0,"AC":0,"S":0,"Z":1,"P":0},
+        "registers":{"A":"00","B":"00","C":"00","D":"00","E":"00","H":"00","L":"00"}
     }
+    
 ]
