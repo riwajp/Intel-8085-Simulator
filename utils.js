@@ -8,6 +8,30 @@ const hex = (decimal) => {
 };
 
 const isHex = (hex, size) => {
+  let chars = [
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+  ];
+  for (let i in hex.split("")) {
+    if (chars.indexOf(i.toUpperCase()) == -1) {
+      console.log(i);
+      return false;
+    }
+  }
   return dec(hex) >= 0 && dec(hex) <= 65535 && hex.length <= size;
 };
 

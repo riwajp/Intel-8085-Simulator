@@ -1133,8 +1133,8 @@ export default function Home() {
           ).slice(1);
         } else {
           registers_temp["L"] = hex(
-            dec(registers_temp["L"]) + dec(to_add)
-          ).slice(2);
+            dec(registers_temp["L"]) + dec(to_add.slice(2))
+          );
         }
 
         registers_temp["H"] = hex(
@@ -1204,7 +1204,7 @@ export default function Home() {
       } else if (code_text_array[0] == "CMP") {
         program_counter = inr(program_counter);
         var difference;
-
+        console.log(code_text_array);
         if (code_text_array[1] != "M") {
           let to_sub = registers_temp[code_text_array[1]];
           if (dec(to_sub.slice(1)) > dec(registers_temp.A.slice(1))) {
@@ -1225,6 +1225,7 @@ export default function Home() {
                 "0"
               );
           }
+
           let ac_flag = flagsStatus(flags_temp, difference);
           flags_temp = ac_flag.flags;
 
@@ -1255,6 +1256,7 @@ export default function Home() {
                 "0"
               );
           }
+          console.log(difference);
           let ac_flag = flagsStatus(flags_temp, difference);
           flags_temp = ac_flag.flags;
 
@@ -1517,7 +1519,6 @@ export default function Home() {
         "INR",
         "DCR",
 
-        "CMA",
         "ANI",
         "ORI",
         "XRI",
@@ -1546,6 +1547,18 @@ export default function Home() {
           flags_temp = ac_flag.flags;
           registers_temp["A"] = ac_flag.acc;
         }
+      }
+      let logic_ops = {
+        ANA: { ...flags_temp, C: 0, AC: 1 },
+        ANI: { ...flags_temp, C: 0, AC: 1 },
+        ORA: { ...flags_temp, C: 0, AC: 0 },
+        ORI: { ...flags_temp, C: 0, AC: 0 },
+        XRA: { ...flags_temp, C: 0, AC: 0 },
+        XRI: { ...flags_temp, C: 0, AC: 0 },
+      };
+
+      if (Object.keys(logic_ops).includes(code_text_array[0])) {
+        flags_temp = logic_ops[code_text_array[0]];
       }
 
       memory_states_temp.push(JSON.parse(JSON.stringify(memory)));
@@ -1610,7 +1623,6 @@ export default function Home() {
           setFlags={setFlags}
         />
         <Flag flags={flags} />
-        <Test execute={execute} />
       </div>
     </div>
   );

@@ -16,33 +16,42 @@ const Tools = ({ memory, setMemory }) => {
         ...memory,
         [memory_form_data.address]: memory_form_data.data,
       });
+      setMemoryFormData({ address: "", data: "" });
     }
   };
   return (
     <div className="tools-container">
       <div className="memory-container-title">Tools</div>
       <div className="memory-slots">
-        <form onSubmit={handleSubmit}>
-          <input
-            value={memory_form_data.address}
-            onChange={(e) =>
-              setMemoryFormData({
-                ...memory_form_data,
-                address: e.target.value,
-              })
-            }
-            maxLength={4}
-          />
-        </form>
-        <form onSubmit={handleSubmit}>
-          <input
-            value={memory_form_data.data}
-            onChange={(e) =>
-              setMemoryFormData({ ...memory_form_data, data: e.target.value })
-            }
-            maxLength={2}
-          />
-        </form>
+        <div className="tool-block">
+          <div className="tool-title">Edit Memory</div>
+          <form onSubmit={handleSubmit}>
+            <input
+              value={memory_form_data.address}
+              onChange={(e) =>
+                setMemoryFormData({
+                  ...memory_form_data,
+                  address: e.target.value,
+                })
+              }
+              maxLength={4}
+              placeholder="Memory Address"
+              className="tool-input"
+            />
+          </form>
+          <form onSubmit={handleSubmit}>
+            <input
+              value={memory_form_data.data}
+              onChange={(e) =>
+                setMemoryFormData({ ...memory_form_data, data: e.target.value })
+              }
+              maxLength={2}
+              placeholder="Data"
+              className="tool-input"
+            />
+            <input type="Submit" value="Enter" className="tool-input-submit" />
+          </form>
+        </div>
       </div>
     </div>
   );
