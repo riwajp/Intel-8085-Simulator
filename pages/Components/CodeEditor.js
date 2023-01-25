@@ -54,7 +54,7 @@ const CodeEditor = ({
         </div>
 
         <div className="start-from-container">
-          <div className="address-label">Speed</div>
+          <div className="address-label">Delay</div>
           <input
             onChange={(e) => setSpeed(e.target.value)}
             value={speed}
