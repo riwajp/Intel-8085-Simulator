@@ -80,7 +80,7 @@ export default function Home() {
     setMemory({});
     let code_lines_separated = code.split("\n").map((e) => e.trim());
 
-    let memory_temp = { ...memory };
+    let memory_temp = { ...user_memory };
 
     var iteration_number = 1;
     var missed_halt = 1;
