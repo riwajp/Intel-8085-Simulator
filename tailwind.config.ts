@@ -6,6 +6,9 @@ export default {
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
+  daisyui: {
+    themes: ["dracula"],
+  },
   theme: {
     extend: {
       colors: {
@@ -13,6 +16,16 @@ export default {
         foreground: "var(--foreground)",
       },
     },
+    fontFamily: {
+      spaceMono: ["Space Mono", "sans-serif"], // Add your custom font
+    },
+    screens: {
+      sm: "620px",
+
+      md: "870px",
+
+      lg: "1075px",
+    },
   },
-  plugins: [],
+  plugins: [require("daisyui")],
 } satisfies Config;

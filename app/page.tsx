@@ -1,101 +1,102 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import About from "@/components/About";
+import Container from "@/components/Container";
+import Control from "@/components/Control";
+import Editor from "@/components/Editor";
+import Log from "@/components/Log";
+import Memory from "@/components/Memory";
+import Registers from "@/components/Registers";
+import { useContext, useEffect, useState } from "react";
+import { appContext } from "./contexts";
+import { execute, load } from "@/app/utils";
+
+export default function IDE() {
+  const { Provider } = appContext;
+  const appState = useContext(appContext);
+
+  let initialRegisters = {
+    A: "00",
+    B: "00",
+    C: "00",
+    D: "00",
+    E: "00",
+    H: "00",
+    L: "00",
+  };
+  const [code, setCode] = useState<String>("mvi a 90\ninr a\nhlt");
+  const [startAddress, setStartAddress] = useState("6969");
+  const [labels, setLabels] = useState({});
+  const [linesMap, setLinesMap] = useState({});
+  const [memory, setMemory] = useState({});
+  const [compilationMemory, setCompilationMemory] = useState({});
+  const [errors, setErrors] = useState({});
+  const [registers, setRegisters] = useState(initialRegisters);
+  const [logs, setLogs] = useState<any[]>([]);
+  const [flags, setFlags] = useState({});
+
+  const [memoryStates, setMemoryStates] = useState<any>([]);
+  const [registerStates, setRegisterStates] = useState<any>([]);
+  const [flagStates, setFlagStates] = useState<any>([]);
+
+  const [delay, setDelay] = useState(10);
+
+  console.log(code);
+
+  useEffect(() => {
+    dispatchLoad();
+  }, []);
+  const dispatchLoad = async () => {
+    const res: any = load(code, initialRegisters, startAddress);
+    if (!res.error) {
+      setMemory(res.memory);
+      setLabels(res.labels);
+      setLinesMap(res.lines_map);
+      setCompilationMemory(res.compilationMemory);
+    }
+
+    const finalRes = await execute(code, initialRegisters, startAddress);
+    setMemory(finalRes?.memory ?? {});
+    setRegisters(finalRes?.registers);
+    setLogs(finalRes?.logs ?? []);
+    setFlags(finalRes?.flags ?? {});
+    setMemoryStates(finalRes?.memoryStates ?? []);
+    setRegisterStates(finalRes?.registerStates ?? []);
+    setFlagStates(finalRes?.flagStates ?? []);
+  };
+
+  const rollBack = (i: Number) => {
+    setMemory(memoryStates[i as any]);
+    setRegisters(registerStates[i as any]);
+    setFlags(flagStates[i as any]);
+  };
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
+    <Provider value={appState}>
+      <Container>
+        <Editor
+          className="col-span-2 row-span-3"
+          onChange={(code) => setCode(code)}
+          code={code}
         />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+        <div className="flex flex-col col-span-2 md:col-span-1 gap-1 sm:gap-4 row-span-3">
+          <Memory className="grow-1" memory={memory} />
+          <Registers registers={registers} />
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+        <About className="md:row-span-3 max-md:order-first   max-md:row-start-1  max-md:col-span-4 " />
+
+        <Log
+          className="row-span-2 col-span-3"
+          rollBack={rollBack}
+          logs={logs}
+          flags={flags}
+        />
+        <Control
+          className="row-span-2"
+          onExecute={dispatchLoad}
+          onDelayChange={(delay: any) => setDelay(delay)}
+          onAddressChange={(address: any) => setStartAddress(address)}
+        />
+      </Container>
+    </Provider>
   );
 }
